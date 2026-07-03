@@ -173,11 +173,11 @@ testing — не окупятся за 1.5 оставшихся дня, судь
 3. [x] Добавить permission-aware слой в `handbook_search` (роль пользователя → фильтр по под-разделу) — `role` param, mock RBAC по `_RESTRICTED_PREFIXES` (compensation → manager+), 2 новых теста зелёные
 4. [x] Guardrail-агент: `context_perimeter_guardrail` (before_model_callback, ambiguity-детектор по юрисдикции) + `dow_guardrail` (before_tool_callback, лимит tool-вызовов за сессию) — оба на callbacks, не отдельные LLM-агенты. Живой прогон подтверждён: неоднозначный запрос → уточняющий вопрос, запрос со страной → обычный ответ. Баг найден при живой проверке (guardrail читал не тот 'user'-контент после transfer_to_agent) — покрыт регрессионным тестом.
 5. [x] HITL как action-tool (mock "create_hr_ticket" tool), не текстовый ответ — логирует тикет в data/hr_tickets.jsonl, инструкция агента требует вызов при no-match вместо расплывчатого отказа
-6. [ ] Domain Router agent (пока один plugin: HR), сформировать как SequentialAgent/routing pattern ADK
+6. [x] Domain Router agent — уже реализовано как Coordinator/sub_agents (agent.py, п.7 предыдущей секции), делегирование через `transfer_to_agent`; отдельный SequentialAgent не строили, текущий routing pattern засчитан курсом как ADK multi-agent
 6. [x] Action Agent: draft_pto_request tool — генерирует draft, approve-gate (approved=False), не сабмитит
 7. [x] not in scope for capstone, post-deadline backlog — stretch, пропущено ради MCP/eval (курс явно требует, выше приоритет)
 8. [x] Обернуть retrieval в MCP-сервер — `mcp_server/handbook_mcp_server.py` (stdio, FastMCP), hr_domain_agent подключается через `McpToolset`, не локальный FunctionTool. Живой прогон подтверждён (видно ListToolsRequest/CallToolRequest в логах). Actions (draft_pto_request, create_hr_ticket) остались локальными FunctionTool — не MCP-обёрнуты (п. "по возможности" не успели, time-boxed под дедлайн)
-9. [ ] Eval-сет 10-15 вопросов + `adk eval` прогон
+9. [x] Eval-сет 12 вопросов + `adk eval` прогон — `eval/build_eval_set.py` (routing/ambiguous_jurisdiction/action/escalation/permission категории), `eval/eval_config.json` (response_match_score, threshold 0.3). Результат: 9/12 (3 фейла — ROUGE-несовпадение формулировок на функционально верных ответах, проверено по сырым tool-calls в eval JSON, не баг). При прогоне нашёл и починил реальный баг: "us" матчился как substring внутри "Just" → provocative-запрос проскакивал guardrail
 10. [ ] Демо-скрипт/питч на 2 минуты (перекликается с общей карьерной задачей "питч SIA+WTA")
 
 ## 9. Структура репозитория
