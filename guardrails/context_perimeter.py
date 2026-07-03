@@ -19,6 +19,9 @@ from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
+from text_utils import tokenize
+
+
 _JURISDICTION_SENSITIVE_TERMS = {
     "leave",
     "benefit",
@@ -27,10 +30,14 @@ _JURISDICTION_SENSITIVE_TERMS = {
     "insurance",
     "holiday",
     "vacation",
+    "pto",
 }
 
 # Single-word country names/codes must match a whole tokenized word — "us"
 # is a substring of "just", so plain `in lower` containment false-positives.
+# "us" itself is excluded here (see _COUNTRY_CODE_US_RE below) — it's also a
+# common English pronoun ("offered to us"), so case-insensitive whole-word
+# matching alone still false-positives.
 _KNOWN_COUNTRIES_SINGLE_WORD = {
     "france",
     "uk",
@@ -42,23 +49,33 @@ _KNOWN_COUNTRIES_SINGLE_WORD = {
     "belgium",
     "netherlands",
     "finland",
-    "us",
     "usa",
     "india",
 }
 # Multi-word names can't be single tokens, so a substring check is safe here.
 _KNOWN_COUNTRIES_MULTI_WORD = {"united kingdom", "new zealand", "united states"}
 
-_WORD_RE = re.compile(r"[a-zA-Z][a-zA-Z\-']+")
+# Only an uppercase standalone "US" counts as the country code — lowercase
+# "us" is far more often the pronoun than the country in normal writing.
+_COUNTRY_CODE_US_RE = re.compile(r"\bUS\b")
+
+# A query naming explicit YYYY-MM-DD dates is a booking/action request
+# (-> draft_pto_request), not a jurisdiction-dependent policy lookup, even
+# if phrased with a sensitive word like "leave" or "PTO".
+_EXPLICIT_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
 def is_ambiguous_jurisdiction_query(text: str) -> bool:
     """True if the query touches jurisdiction-sensitive HR topics but names no country."""
+    if _EXPLICIT_DATE_RE.search(text):
+        return False
     lower = text.lower()
-    words = set(_WORD_RE.findall(lower))
+    words = set(tokenize(text))
     if not words & _JURISDICTION_SENSITIVE_TERMS:
         return False
     if words & _KNOWN_COUNTRIES_SINGLE_WORD:
+        return False
+    if _COUNTRY_CODE_US_RE.search(text):
         return False
     return not any(phrase in lower for phrase in _KNOWN_COUNTRIES_MULTI_WORD)
 

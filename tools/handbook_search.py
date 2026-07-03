@@ -11,9 +11,10 @@ retrieval (chunking + embeddings) once the agent loop works end to end.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
+
+from text_utils import tokenize as _tokenize
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "handbook"
 
@@ -35,19 +36,12 @@ def _role_allows(role: str, relative_path: str) -> bool:
     return _ROLE_RANK.get(role, 0) >= _ROLE_RANK[_min_role_for(relative_path)]
 
 
-_WORD_RE = re.compile(r"[a-zA-Z][a-zA-Z\-']+")
-
-
 @dataclass
 class Document:
     path: Path
     title: str
     text: str
     tokens: list[str]
-
-
-def _tokenize(text: str) -> list[str]:
-    return [w.lower() for w in _WORD_RE.findall(text)]
 
 
 def _load_documents() -> list[Document]:

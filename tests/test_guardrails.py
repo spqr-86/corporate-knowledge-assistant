@@ -39,6 +39,39 @@ def test_does_not_flag_pto_booking_request_with_explicit_dates():
     )
 
 
+def test_does_not_flag_leave_booking_request_with_explicit_dates():
+    """'leave' is a sensitive term, but hr_domain_agent's own instruction
+    (rule 5) routes 'leave' booking requests to draft_pto_request — same
+    root cause as the already-fixed 'pto' false positive, just reachable via
+    a synonym. Explicit dates signal an action request, not a lookup."""
+    assert (
+        is_ambiguous_jurisdiction_query(
+            "I want to take leave from 2026-08-10 to 2026-08-14 for a family trip."
+        )
+        is False
+    )
+
+
+def test_flags_query_using_us_as_pronoun_not_country():
+    """'us' is also an ordinary English pronoun ('offered to us') — must not
+    be treated as if the United States had been named."""
+    assert (
+        is_ambiguous_jurisdiction_query(
+            "What parental leave benefits are offered to us?"
+        )
+        is True
+    )
+
+
+def test_does_not_flag_query_naming_us_as_country():
+    assert (
+        is_ambiguous_jurisdiction_query(
+            "What parental leave benefits does GitLab offer in the US?"
+        )
+        is False
+    )
+
+
 def test_does_not_false_positive_on_country_code_substring():
     """'us' (United States) must not match as a substring of unrelated words
     like 'Just' — regression for a bug found via adk eval where a provocative

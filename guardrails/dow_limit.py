@@ -12,12 +12,19 @@ Output: None (call proceeds) or a dict {status: "error", error_message}
 
 from __future__ import annotations
 
+from typing import Any
+
+from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.tool_context import ToolContext
+
 DOW_TOOL_CALL_LIMIT = 5
 
 _STATE_KEY = "dow_tool_call_count"
 
 
-def dow_guardrail(*, tool, args: dict, tool_context) -> dict | None:
+def dow_guardrail(
+    *, tool: BaseTool, args: dict[str, Any], tool_context: ToolContext
+) -> dict | None:
     count = tool_context.state.get(_STATE_KEY, 0)
     if count >= DOW_TOOL_CALL_LIMIT:
         return {
