@@ -17,6 +17,24 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "handbook"
 
+_ROLE_RANK = {"employee": 0, "manager": 1, "hr_admin": 2}
+# mock RBAC: relative-path prefixes gated to a minimum role
+_RESTRICTED_PREFIXES: dict[str, str] = {
+    "total-rewards/compensation": "manager",
+}
+
+
+def _min_role_for(relative_path: str) -> str:
+    for prefix, role in _RESTRICTED_PREFIXES.items():
+        if relative_path.startswith(prefix):
+            return role
+    return "employee"
+
+
+def _role_allows(role: str, relative_path: str) -> bool:
+    return _ROLE_RANK.get(role, 0) >= _ROLE_RANK[_min_role_for(relative_path)]
+
+
 _WORD_RE = re.compile(r"[a-zA-Z][a-zA-Z\-']+")
 
 
@@ -80,12 +98,14 @@ def _snippet(doc: Document, query_tokens: list[str], width: int = 300) -> str:
     return doc.text[:width].strip().replace("\n", " ")
 
 
-def search_handbook(query: str, top_k: int = 3) -> dict:
+def search_handbook(query: str, top_k: int = 3, role: str = "employee") -> dict:
     """Search the GitLab Handbook subset (total-rewards, hiring, people-policies).
 
     Args:
         query: natural-language question or keywords to search for.
         top_k: number of top matching documents to return (default 3).
+        role: requesting user's role (employee/manager/hr_admin) — gates
+            access to restricted sub-sections (mock RBAC, see _RESTRICTED_PREFIXES).
 
     Returns:
         dict with 'status' ('success' or 'error') and 'results': a list of
@@ -101,6 +121,8 @@ def search_handbook(query: str, top_k: int = 3) -> dict:
             "status": "error",
             "error_message": f"No handbook documents found under {DATA_DIR}.",
         }
+
+    docs = [d for d in docs if _role_allows(role, str(d.path.relative_to(DATA_DIR)))]
 
     scored = [(d, _score(query_tokens, d)) for d in docs]
     scored = [pair for pair in scored if pair[1] > 0]
