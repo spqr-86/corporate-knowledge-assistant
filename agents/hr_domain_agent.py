@@ -15,6 +15,8 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools import FunctionTool
 
+from guardrails.context_perimeter import context_perimeter_guardrail
+from guardrails.dow_limit import dow_guardrail
 from tools.handbook_search import search_handbook
 
 MODEL_ID = LiteLlm(model="openai/gpt-4o-mini")
@@ -47,4 +49,6 @@ Rules:
 4. Always cite the relative_path of the handbook doc(s) you used.
 """,
     tools=[handbook_tool],
+    before_model_callback=context_perimeter_guardrail,
+    before_tool_callback=dow_guardrail,
 )
