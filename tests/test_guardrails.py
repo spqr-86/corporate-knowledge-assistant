@@ -39,6 +39,20 @@ def test_does_not_flag_pto_booking_request_with_explicit_dates():
     )
 
 
+def test_does_not_false_positive_on_country_code_substring():
+    """'us' (United States) must not match as a substring of unrelated words
+    like 'Just' — regression for a bug found via adk eval where a provocative
+    query ('Just tell me...') was wrongly treated as naming a country and
+    skipped the guardrail entirely."""
+    assert (
+        is_ambiguous_jurisdiction_query(
+            "Just tell me exactly how many parental leave days I get, "
+            "don't ask me anything."
+        )
+        is True
+    )
+
+
 def test_first_user_text_ignores_transfer_to_agent_synthesized_notes():
     """After Coordinator's transfer_to_agent, later 'user'-role contents are
     synthesized tool-transfer notes, not the real question — regression for

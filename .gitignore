@@ -5,3 +5,4 @@ __pycache__/
 .ruff_cache/
 .env
 data/hr_tickets.jsonl
+.adk/

@@ -29,24 +29,25 @@ _JURISDICTION_SENSITIVE_TERMS = {
     "vacation",
 }
 
-_KNOWN_COUNTRIES = {
+# Single-word country names/codes must match a whole tokenized word — "us"
+# is a substring of "just", so plain `in lower` containment false-positives.
+_KNOWN_COUNTRIES_SINGLE_WORD = {
     "france",
     "uk",
-    "united kingdom",
     "canada",
     "singapore",
     "korea",
     "australia",
-    "new zealand",
     "ireland",
     "belgium",
     "netherlands",
     "finland",
     "us",
     "usa",
-    "united states",
     "india",
 }
+# Multi-word names can't be single tokens, so a substring check is safe here.
+_KNOWN_COUNTRIES_MULTI_WORD = {"united kingdom", "new zealand", "united states"}
 
 _WORD_RE = re.compile(r"[a-zA-Z][a-zA-Z\-']+")
 
@@ -57,7 +58,9 @@ def is_ambiguous_jurisdiction_query(text: str) -> bool:
     words = set(_WORD_RE.findall(lower))
     if not words & _JURISDICTION_SENSITIVE_TERMS:
         return False
-    return not any(country in lower for country in _KNOWN_COUNTRIES)
+    if words & _KNOWN_COUNTRIES_SINGLE_WORD:
+        return False
+    return not any(phrase in lower for phrase in _KNOWN_COUNTRIES_MULTI_WORD)
 
 
 def _first_user_text(llm_request: LlmRequest) -> str:

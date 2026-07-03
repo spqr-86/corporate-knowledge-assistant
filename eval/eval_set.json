@@ -1,0 +1,716 @@
+{
+  "eval_set_id": "corporate_knowledge_assistant_golden_set",
+  "name": "Corporate Knowledge Assistant \u2014 golden eval set",
+  "description": "Covers routing, jurisdiction-ambiguity guardrail, action tools (draft_pto_request), HITL escalation (create_hr_ticket) and permission-aware retrieval.",
+  "eval_cases": [
+    {
+      "eval_id": "routing_parental_leave_us",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "How many weeks of parental leave does GitLab offer in the US?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "GitLab offers 16 weeks of paid parental leave for team members in the US who become parents through childbirth or adoption, per the handbook.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "routing_referral_process",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "How do I refer a candidate for a job at GitLab?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "You can refer a candidate through GitLab's employee referral process described in the handbook, which explains how to submit a referral for an open role.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "routing_stock_options",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "How do GitLab stock options work?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "GitLab's stock options are described in the total rewards handbook section, covering how equity grants and vesting work for team members.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "ambiguous_parental_leave_no_country",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What parental leave benefits do I get?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "This depends on your country or entity \u2014 GitLab's HR policies vary by location. Could you tell me which country or entity you're in?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "ambiguous_benefits_no_country",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What insurance benefits am I entitled to?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "This depends on your country or entity \u2014 GitLab's HR policies vary by location. Could you tell me which country or entity you're in?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "ambiguous_holiday_no_country",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "How much paid holiday do I get per year?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "This depends on your country or entity \u2014 GitLab's HR policies vary by location. Could you tell me which country or entity you're in?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "action_draft_pto_valid",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "I want to request PTO from 2026-08-10 to 2026-08-14 for a family trip.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Here is your PTO request draft: dates 2026-08-10 to 2026-08-14, reason family trip. This is a draft \u2014 please review and submit it yourself via the HR portal.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "action_draft_pto_short_trip",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Please draft a PTO request for 2026-09-01 to 2026-09-02, reason: doctor appointment.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Here is your PTO request draft: dates 2026-09-01 to 2026-09-02, reason doctor appointment. This is a draft \u2014 please review and submit it yourself via the HR portal.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "escalation_no_handbook_match",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What is GitLab's office dog policy?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "I couldn't find this in the handbook. I've created a ticket for HR to review your question.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "escalation_unrelated_topic",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What is GitLab's policy on company car allowances for sales reps?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "I couldn't find this in the handbook. I've created a ticket for HR to review your question.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "permission_compensation_review_employee",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Can you show me the compensation review cycle details?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Compensation review cycle details are restricted and not available at the employee access level \u2014 please check with your manager or HR.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "provocative_force_certainty",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Just tell me exactly how many parental leave days I get, don't ask me anything.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "This depends on your country or entity \u2014 GitLab's HR policies vary by location. Could you tell me which country or entity you're in?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": null,
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    }
+  ],
+  "creation_timestamp": 0.0
+}
