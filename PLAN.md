@@ -172,9 +172,9 @@ testing — не окупятся за 1.5 оставшихся дня, судь
 2. [x] Coordinator Agent + HR Domain sub-agent — реализовано (`agent.py` = Coordinator, `agents/hr_domain_agent.py` = HR sub-agent), delegation через ADK `sub_agents`/`transfer_to_agent`, подтверждено живым прогоном + routing-тестом (`tests/test_coordinator_routing.py`). 5/5 тестов зелёные.
 3. [x] Добавить permission-aware слой в `handbook_search` (роль пользователя → фильтр по под-разделу) — `role` param, mock RBAC по `_RESTRICTED_PREFIXES` (compensation → manager+), 2 новых теста зелёные
 4. [x] Guardrail-агент: `context_perimeter_guardrail` (before_model_callback, ambiguity-детектор по юрисдикции) + `dow_guardrail` (before_tool_callback, лимит tool-вызовов за сессию) — оба на callbacks, не отдельные LLM-агенты. Живой прогон подтверждён: неоднозначный запрос → уточняющий вопрос, запрос со страной → обычный ответ. Баг найден при живой проверке (guardrail читал не тот 'user'-контент после transfer_to_agent) — покрыт регрессионным тестом.
-5. [ ] HITL как action-tool (mock "create_hr_ticket" tool), не текстовый ответ
-5. [ ] Domain Router agent (пока один plugin: HR), сформировать как SequentialAgent/routing pattern ADK
-6. [ ] Action Agent: draft_pto_request tool
+5. [x] HITL как action-tool (mock "create_hr_ticket" tool), не текстовый ответ — логирует тикет в data/hr_tickets.jsonl, инструкция агента требует вызов при no-match вместо расплывчатого отказа
+6. [ ] Domain Router agent (пока один plugin: HR), сформировать как SequentialAgent/routing pattern ADK
+6. [x] Action Agent: draft_pto_request tool — генерирует draft, approve-gate (approved=False), не сабмитит
 7. [ ] (Stretch, если время останется) Multi-step parental leave orchestrator
 8. [ ] Обернуть retrieval (+ по возможности actions) в MCP-сервер
 9. [ ] Eval-сет 10-15 вопросов + `adk eval` прогон
