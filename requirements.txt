@@ -1,4 +1,5 @@
 google-adk==2.3.0
 litellm==1.90.2
+mcp==1.28.1
 pytest==9.1.1
 pytest-asyncio==1.4.0

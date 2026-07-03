@@ -175,8 +175,8 @@ testing — не окупятся за 1.5 оставшихся дня, судь
 5. [x] HITL как action-tool (mock "create_hr_ticket" tool), не текстовый ответ — логирует тикет в data/hr_tickets.jsonl, инструкция агента требует вызов при no-match вместо расплывчатого отказа
 6. [ ] Domain Router agent (пока один plugin: HR), сформировать как SequentialAgent/routing pattern ADK
 6. [x] Action Agent: draft_pto_request tool — генерирует draft, approve-gate (approved=False), не сабмитит
-7. [ ] (Stretch, если время останется) Multi-step parental leave orchestrator
-8. [ ] Обернуть retrieval (+ по возможности actions) в MCP-сервер
+7. [x] not in scope for capstone, post-deadline backlog — stretch, пропущено ради MCP/eval (курс явно требует, выше приоритет)
+8. [x] Обернуть retrieval в MCP-сервер — `mcp_server/handbook_mcp_server.py` (stdio, FastMCP), hr_domain_agent подключается через `McpToolset`, не локальный FunctionTool. Живой прогон подтверждён (видно ListToolsRequest/CallToolRequest в логах). Actions (draft_pto_request, create_hr_ticket) остались локальными FunctionTool — не MCP-обёрнуты (п. "по возможности" не успели, time-boxed под дедлайн)
 9. [ ] Eval-сет 10-15 вопросов + `adk eval` прогон
 10. [ ] Демо-скрипт/питч на 2 минуты (перекликается с общей карьерной задачей "питч SIA+WTA")
 

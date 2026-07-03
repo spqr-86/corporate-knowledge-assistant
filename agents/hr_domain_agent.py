@@ -11,19 +11,35 @@ Extension point: this is domain plugin #1 (HR). Adding a second domain
 it in the Coordinator's sub_agents in agent.py — no change to this file.
 """
 
+from pathlib import Path
+
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools import FunctionTool
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
+from mcp import StdioServerParameters
 
 from guardrails.context_perimeter import context_perimeter_guardrail
 from guardrails.dow_limit import dow_guardrail
 from tools.create_hr_ticket import create_hr_ticket
 from tools.draft_pto_request import draft_pto_request
-from tools.handbook_search import search_handbook
 
 MODEL_ID = LiteLlm(model="openai/gpt-4o-mini")
 
-handbook_tool = FunctionTool(func=search_handbook)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# retrieval is exposed over MCP (mcp_server/handbook_mcp_server.py), not a
+# local FunctionTool — the course requires demonstrating MCP as a protocol.
+handbook_mcp_toolset = McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="python3",
+            args=["-m", "mcp_server.handbook_mcp_server"],
+            cwd=str(PROJECT_ROOT),
+        ),
+    ),
+)
 draft_pto_tool = FunctionTool(func=draft_pto_request)
 create_ticket_tool = FunctionTool(func=create_hr_ticket)
 
@@ -59,7 +75,7 @@ Rules:
    confidently even after the user clarified, also use 'create_hr_ticket'
    to escalate instead of guessing or giving a vague non-answer.
 """,
-    tools=[handbook_tool, draft_pto_tool, create_ticket_tool],
+    tools=[handbook_mcp_toolset, draft_pto_tool, create_ticket_tool],
     before_model_callback=context_perimeter_guardrail,
     before_tool_callback=dow_guardrail,
 )
