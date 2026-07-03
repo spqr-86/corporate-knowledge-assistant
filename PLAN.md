@@ -170,9 +170,9 @@ testing — не окупятся за 1.5 оставшихся дня, судь
 
 1. [x] Получить/подтвердить рабочий API-ключ — снято: переключились на OpenAI (LiteLLM), ключ из regulatory-rag/.env, первый сквозной прогон подтверждён
 2. [x] Coordinator Agent + HR Domain sub-agent — реализовано (`agent.py` = Coordinator, `agents/hr_domain_agent.py` = HR sub-agent), delegation через ADK `sub_agents`/`transfer_to_agent`, подтверждено живым прогоном + routing-тестом (`tests/test_coordinator_routing.py`). 5/5 тестов зелёные.
-3. [ ] Добавить permission-aware слой в `handbook_search` (роль пользователя → фильтр по под-разделу)
-3. [ ] Guardrail-агент: confidence scoring по retrieval score + ambiguity-детектор (юрисдикция не указана + затронуты country-specific доки)
-4. [ ] HITL как action-tool (mock "create_hr_ticket" tool), не текстовый ответ
+3. [x] Добавить permission-aware слой в `handbook_search` (роль пользователя → фильтр по под-разделу) — `role` param, mock RBAC по `_RESTRICTED_PREFIXES` (compensation → manager+), 2 новых теста зелёные
+4. [x] Guardrail-агент: `context_perimeter_guardrail` (before_model_callback, ambiguity-детектор по юрисдикции) + `dow_guardrail` (before_tool_callback, лимит tool-вызовов за сессию) — оба на callbacks, не отдельные LLM-агенты. Живой прогон подтверждён: неоднозначный запрос → уточняющий вопрос, запрос со страной → обычный ответ. Баг найден при живой проверке (guardrail читал не тот 'user'-контент после transfer_to_agent) — покрыт регрессионным тестом.
+5. [ ] HITL как action-tool (mock "create_hr_ticket" tool), не текстовый ответ
 5. [ ] Domain Router agent (пока один plugin: HR), сформировать как SequentialAgent/routing pattern ADK
 6. [ ] Action Agent: draft_pto_request tool
 7. [ ] (Stretch, если время останется) Multi-step parental leave orchestrator
