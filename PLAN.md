@@ -276,6 +276,18 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 - Формат MCP-сервера: локальный stdio-сервер для демо или что-то показательнее?
 - Multi-step orchestrator (п.7 stretch) — включать в основной демо-путь или как "если успеем"?
 
+## 13. Code review (post-DoD, до сдачи)
+
+Полный code-review (8 углов поиска + верификация каждой находки) после закрытия всех пунктов плана. 5 подтверждённых находок, все исправлены:
+
+1. **RBAC bypass** (SECURITY) — `role` в search_handbook был обычным LLM-управляемым параметром MCP-tool, никак не привязанным к реальной личности. Исправлено: `role` убран из MCP-схемы совсем, захардкожен в `employee` на mcp_server/handbook_mcp_server.py.
+2. **"leave" конфликтовал с draft_pto_request routing** — фраза "take leave" с явными датами блокировалась guardrail'ом до того, как LLM успевал вызвать action tool. Исправлено обобщённо: явная дата YYYY-MM-DD в запросе теперь всегда байпасит jurisdiction-check (это action, не lookup); заодно вернул "pto" обратно в sensitive-terms (для голых информационных вопросов).
+3. **"us" как местоимение** — "offered to us" ложно распознавалось как названная страна США. Исправлено: только заглавное "US" считается кодом страны.
+4. **Дублирование tokenizer regex** между handbook_search.py и context_perimeter.py — вынесено в text_utils.py.
+5. **Отсутствие тайп-хинтов** в dow_guardrail — добавлены (BaseTool, ToolContext).
+
+31/31 тестов зелёные, живой прогон подтверждён (RBAC bypass больше не работает, "take leave" с датами доходит до draft_pto_request).
+
 ## 12. Definition of Done (капстон сдан)
 
 Явный проверяемый чеклист — не "работает на глаз". Капстон готов к сдаче, когда:
