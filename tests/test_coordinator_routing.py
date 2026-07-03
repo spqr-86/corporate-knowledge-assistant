@@ -28,6 +28,9 @@ async def test_hr_question_is_answered_via_handbook():
     answered with a handbook citation — proxy for 'routing worked', since
     we can't assert on the exact transfer_to_agent event without wiring up
     a custom event-capturing runner."""
-    answer = await ask("How many weeks of parental leave does GitLab offer?")
+    # Names a country so the context-perimeter guardrail (added later, see
+    # guardrails/context_perimeter.py) doesn't short-circuit with a
+    # clarifying question instead of routing through to a handbook answer.
+    answer = await ask("How many weeks of parental leave does GitLab offer in the US?")
     assert answer
     assert ".md" in answer.lower() or "handbook" in answer.lower()

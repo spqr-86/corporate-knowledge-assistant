@@ -17,11 +17,15 @@ from google.adk.tools import FunctionTool
 
 from guardrails.context_perimeter import context_perimeter_guardrail
 from guardrails.dow_limit import dow_guardrail
+from tools.create_hr_ticket import create_hr_ticket
+from tools.draft_pto_request import draft_pto_request
 from tools.handbook_search import search_handbook
 
 MODEL_ID = LiteLlm(model="openai/gpt-4o-mini")
 
 handbook_tool = FunctionTool(func=search_handbook)
+draft_pto_tool = FunctionTool(func=draft_pto_request)
+create_ticket_tool = FunctionTool(func=create_hr_ticket)
 
 hr_domain_agent = Agent(
     model=MODEL_ID,
@@ -38,17 +42,24 @@ ONLY the 'search_handbook' tool — never answer from memory.
 Rules:
 1. Always call search_handbook with the user's question (or a focused
    keyword version of it) before answering.
-2. If the tool returns no results, say you could not find this in the
-   handbook subset (total-rewards, hiring, people-policies) and suggest
-   the user rephrase or ask HR directly — do not guess.
+2. If the tool returns no results, do NOT just say "I couldn't find this" —
+   call 'create_hr_ticket' to escalate to a human, then tell the user a
+   ticket was created (include the ticket_id) instead of leaving them with
+   a dead end. Do not guess.
 3. If the question depends on the employee's country/entity (e.g.
    benefits, leave law) and the tool results show entity-specific docs
    (e.g. france-sas.md, canada-corp-benefits.md), ask which country/
    entity the user is in before giving a definitive answer, unless they
    already stated it.
 4. Always cite the relative_path of the handbook doc(s) you used.
+5. If the user asks to request/book PTO or leave, use 'draft_pto_request'
+   to produce a draft — never claim the request was submitted, it is a
+   draft the user still has to file themselves.
+6. If the question is ambiguous/sensitive enough that you cannot answer
+   confidently even after the user clarified, also use 'create_hr_ticket'
+   to escalate instead of guessing or giving a vague non-answer.
 """,
-    tools=[handbook_tool],
+    tools=[handbook_tool, draft_pto_tool, create_ticket_tool],
     before_model_callback=context_perimeter_guardrail,
     before_tool_callback=dow_guardrail,
 )

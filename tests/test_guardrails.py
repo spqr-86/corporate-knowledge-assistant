@@ -27,6 +27,18 @@ def test_does_not_flag_jurisdiction_neutral_query():
     assert is_ambiguous_jurisdiction_query("How do I refer a candidate?") is False
 
 
+def test_does_not_flag_pto_booking_request_with_explicit_dates():
+    """PTO-booking requests carry explicit dates and go to draft_pto_request,
+    not a jurisdiction-dependent benefits lookup — regression for a bug found
+    during live testing where 'PTO' alone tripped the guardrail."""
+    assert (
+        is_ambiguous_jurisdiction_query(
+            "I want to request PTO from 2026-08-10 to 2026-08-14 for a family trip."
+        )
+        is False
+    )
+
+
 def test_first_user_text_ignores_transfer_to_agent_synthesized_notes():
     """After Coordinator's transfer_to_agent, later 'user'-role contents are
     synthesized tool-transfer notes, not the real question — regression for

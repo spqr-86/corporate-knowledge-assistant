@@ -23,7 +23,6 @@ _JURISDICTION_SENSITIVE_TERMS = {
     "leave",
     "benefit",
     "benefits",
-    "pto",
     "parental",
     "insurance",
     "holiday",
