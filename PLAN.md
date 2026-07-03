@@ -178,7 +178,7 @@ testing — не окупятся за 1.5 оставшихся дня, судь
 7. [x] not in scope for capstone, post-deadline backlog — stretch, пропущено ради MCP/eval (курс явно требует, выше приоритет)
 8. [x] Обернуть retrieval в MCP-сервер — `mcp_server/handbook_mcp_server.py` (stdio, FastMCP), hr_domain_agent подключается через `McpToolset`, не локальный FunctionTool. Живой прогон подтверждён (видно ListToolsRequest/CallToolRequest в логах). Actions (draft_pto_request, create_hr_ticket) остались локальными FunctionTool — не MCP-обёрнуты (п. "по возможности" не успели, time-boxed под дедлайн)
 9. [x] Eval-сет 12 вопросов + `adk eval` прогон — `eval/build_eval_set.py` (routing/ambiguous_jurisdiction/action/escalation/permission категории), `eval/eval_config.json` (response_match_score, threshold 0.3). Результат: 9/12 (3 фейла — ROUGE-несовпадение формулировок на функционально верных ответах, проверено по сырым tool-calls в eval JSON, не баг). При прогоне нашёл и починил реальный баг: "us" матчился как substring внутри "Just" → provocative-запрос проскакивал guardrail
-10. [ ] Демо-скрипт/питч на 2 минуты (перекликается с общей карьерной задачей "питч SIA+WTA")
+10. [x] README.md с питчем и инструкцией запуска — по аналогии со стилем regulatory-rag README (проблема → how it works → concepts → eval results → quick start)
 
 ## 9. Структура репозитория
 
