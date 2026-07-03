@@ -203,8 +203,8 @@ corporate-knowledge-assistant/
 │       ├── SKILL.md             # критерии эскалации, YAML frontmatter
 │       ├── scripts/              # confidence scoring, ambiguity detection
 │       └── references/           # список country-specific доков
-├── mcp/
-│   └── handbook_mcp_server.py    # MCP-обёртка над retrieval (to-do, п.8 плана)
+├── mcp_server/                   # НЕ mcp/ — тот shadow'ит pip-пакет `mcp`
+│   └── handbook_mcp_server.py    # MCP-обёртка над retrieval (готово, п.8 плана)
 ├── data/
 │   ├── HANDBOOK_LICENSE
 │   └── handbook/                 # 47 md-файлов (готово)
