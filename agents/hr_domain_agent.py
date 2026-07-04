@@ -15,7 +15,7 @@ from pathlib import Path
 
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
-from google.adk.tools import FunctionTool
+from google.adk.tools import FunctionTool, load_memory
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from mcp import StdioServerParameters
@@ -63,11 +63,15 @@ Rules:
    call 'create_hr_ticket' to escalate to a human, then tell the user a
    ticket was created (include the ticket_id) instead of leaving them with
    a dead end. Do not guess.
-3. If the question depends on the employee's country/entity (e.g.
-   benefits, leave law) and the tool results show entity-specific docs
-   (e.g. france-sas.md, canada-corp-benefits.md), ask which country/
-   entity the user is in before giving a definitive answer, unless they
-   already stated it.
+3. If the user already named their country/entity (in the question or
+   earlier in this conversation), just answer for that country — do not
+   call load_memory for it and do not escalate.
+3a. If the question depends on the employee's country/entity (e.g.
+   benefits, leave law) and the user has NOT named one anywhere in this
+   conversation, call 'load_memory' to check whether they told us in a
+   past conversation before asking. If memory has it, use it. If memory
+   has nothing, ask which country/entity they are in — an empty
+   load_memory result is normal and is NOT a reason to escalate.
 4. Always cite the relative_path of the handbook doc(s) you used.
 5. If the user asks to request/book PTO or leave, use 'draft_pto_request'
    to produce a draft — never claim the request was submitted, it is a
@@ -76,7 +80,7 @@ Rules:
    confidently even after the user clarified, also use 'create_hr_ticket'
    to escalate instead of guessing or giving a vague non-answer.
 """,
-    tools=[handbook_mcp_toolset, draft_pto_tool, create_ticket_tool],
+    tools=[handbook_mcp_toolset, draft_pto_tool, create_ticket_tool, load_memory],
     before_model_callback=context_perimeter_guardrail,
     before_tool_callback=[bind_role_from_session, dow_guardrail],
 )

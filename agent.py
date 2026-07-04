@@ -7,12 +7,18 @@ Role: root Coordinator Agent delegating to domain sub-agents via ADK's
       in sub_agents below — this file's structure doesn't change.
 Input: interactive stdin question, or ask(question) programmatically.
 Output: printed/returned agent response (final answer after any delegation).
+Memory: one process-level Runner holds the session service (multi-turn
+      within a session) and an InMemoryMemoryService (cross-session recall
+      via the load_memory tool). /new in the CLI archives the current
+      session to memory and starts a fresh one; exit archives too.
 """
 
 import asyncio
 import os
+import uuid
 
 from google.adk.agents import Agent
+from google.adk.memory import InMemoryMemoryService
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
@@ -41,25 +47,68 @@ sub-agent exists yet, say this assistant currently only covers HR topics.
 )
 
 
-async def ask(question: str, role: str = "employee") -> str:
+# Process-level runner: one session service (multi-turn history within a
+# session) and one memory service (cross-session recall) per process. Lazy
+# so tests can reset it between cases.
+_runner: Runner | None = None
+
+
+def get_runner() -> Runner:
+    global _runner
+    if _runner is None:
+        _runner = Runner(
+            agent=root_agent,
+            app_name=APP_NAME,
+            session_service=InMemorySessionService(),
+            memory_service=InMemoryMemoryService(),
+        )
+    return _runner
+
+
+async def ensure_session(session_id: str, role: str = "employee"):
+    """Get the session, creating it (with user_role seeded) on first use.
+
+    role only applies at creation — an existing session keeps the role it
+    was created with (see guardrails/role_binding.py for why role must come
+    from session state, never from the model).
+    """
+    runner = get_runner()
+    session = await runner.session_service.get_session(
+        app_name=APP_NAME, user_id=USER_ID, session_id=session_id
+    )
+    if session is None:
+        session = await runner.session_service.create_session(
+            app_name=APP_NAME,
+            user_id=USER_ID,
+            session_id=session_id,
+            state={"user_role": role},
+        )
+    return session
+
+
+async def save_session_to_memory(session_id: str) -> None:
+    """Archive a finished conversation into cross-session memory."""
+    runner = get_runner()
+    session = await runner.session_service.get_session(
+        app_name=APP_NAME, user_id=USER_ID, session_id=session_id
+    )
+    if session is not None and session.events:
+        await runner.memory_service.add_session_to_memory(session)
+
+
+async def ask(
+    question: str, role: str = "employee", session_id: str = SESSION_ID
+) -> str:
     """role: the requesting user's role (employee/manager/hr_admin), set
     once at session creation from a trusted context — never derived from
     the model's own tool-call arguments (see guardrails/role_binding.py)."""
-    session_service = InMemorySessionService()
-    await session_service.create_session(
-        app_name=APP_NAME,
-        user_id=USER_ID,
-        session_id=SESSION_ID,
-        state={"user_role": role},
-    )
-    runner = Runner(
-        agent=root_agent, app_name=APP_NAME, session_service=session_service
-    )
+    await ensure_session(session_id, role=role)
+    runner = get_runner()
 
     content = types.Content(role="user", parts=[types.Part(text=question)])
     final_text = ""
     async for event in runner.run_async(
-        user_id=USER_ID, session_id=SESSION_ID, new_message=content
+        user_id=USER_ID, session_id=session_id, new_message=content
     ):
         if event.is_final_response() and event.content and event.content.parts:
             final_text = event.content.parts[0].text or ""
@@ -72,7 +121,11 @@ async def main() -> None:
             "OPENAI_API_KEY not set. Export it before running: export OPENAI_API_KEY=sk-..."
         )
     role = os.environ.get("USER_ROLE", "employee")
-    print(f"{APP_NAME} — ask a question as role={role} (Ctrl+C to exit)")
+    session_id = f"cli-{uuid.uuid4().hex[:8]}"
+    print(
+        f"{APP_NAME} — ask a question as role={role} "
+        "(/new = archive conversation & start fresh, Ctrl+C to exit)"
+    )
     while True:
         try:
             question = input("\nYou: ").strip()
@@ -80,8 +133,16 @@ async def main() -> None:
             break
         if not question:
             continue
-        answer = await ask(question, role=role)
+        if question == "/new":
+            await save_session_to_memory(session_id)
+            session_id = f"cli-{uuid.uuid4().hex[:8]}"
+            print("(conversation archived to memory — starting a new one)")
+            continue
+        answer = await ask(question, role=role, session_id=session_id)
         print(f"\nAgent: {answer}")
+    # archive the last conversation on exit too — becomes real persistence
+    # for free if InMemoryMemoryService is swapped for a durable backend
+    await save_session_to_memory(session_id)
 
 
 if __name__ == "__main__":

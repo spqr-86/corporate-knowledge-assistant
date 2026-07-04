@@ -80,26 +80,63 @@ def is_ambiguous_jurisdiction_query(text: str) -> bool:
     return not any(phrase in lower for phrase in _KNOWN_COUNTRIES_MULTI_WORD)
 
 
-def _first_user_text(llm_request: LlmRequest) -> str:
-    """The original user question — the first 'user' content in the request.
+def _last_user_text(llm_request: LlmRequest) -> str:
+    """The current user question — the last REAL 'user' content.
 
-    After transfer_to_agent, later 'user'-role contents are synthesized
-    tool-transfer notes ("For context: ... called tool ..."), not the
-    original question, so we can't just take the last user-role content.
+    Two traps: (1) transfer_to_agent injects synthesized 'user'-role
+    tool-transfer notes ("For context: ... called tool ..."), which must be
+    skipped; (2) with a process-level session, contents accumulate the whole
+    conversation, so taking the FIRST user message would forever re-judge
+    turn 1 instead of the question actually being asked now.
     """
-    for content in llm_request.contents or []:
+    for content in reversed(llm_request.contents or []):
         if content.role != "user":
             continue
-        return " ".join(part.text for part in (content.parts or []) if part.text)
+        text = " ".join(part.text for part in (content.parts or []) if part.text)
+        if not text or text.startswith("For context:"):
+            continue
+        return text
     return ""
 
 
-def context_perimeter_guardrail(
+def _text_names_known_country(text: str) -> bool:
+    lower = text.lower()
+    words = set(tokenize(text))
+    if words & _KNOWN_COUNTRIES_SINGLE_WORD:
+        return True
+    if _COUNTRY_CODE_US_RE.search(text):
+        return True
+    return any(phrase in lower for phrase in _KNOWN_COUNTRIES_MULTI_WORD)
+
+
+async def _memory_knows_country(callback_context: CallbackContext) -> bool:
+    """True if a past conversation in memory names the user's country."""
+    try:
+        response = await callback_context.search_memory("user country entity location")
+    except ValueError:  # no memory service wired (e.g. bare adk eval Runner)
+        return False
+    for memory in response.memories:
+        if memory.content and memory.content.parts:
+            text = " ".join(p.text for p in memory.content.parts if p.text)
+            if _text_names_known_country(text):
+                return True
+    return False
+
+
+async def context_perimeter_guardrail(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> LlmResponse | None:
-    """before_model_callback: ask for the country before calling the LLM if ambiguous."""
-    text = _first_user_text(llm_request)
+    """before_model_callback: ask for the country before calling the LLM if ambiguous.
+
+    Before short-circuiting, checks cross-session memory: if a past
+    conversation already named the country, the LLM gets the turn (its
+    instruction tells it to recall the country via load_memory) instead of
+    the user being re-asked something they already answered.
+    """
+    text = _last_user_text(llm_request)
     if not is_ambiguous_jurisdiction_query(text):
+        return None
+    if await _memory_knows_country(callback_context):
         return None
     return LlmResponse(
         content=types.Content(

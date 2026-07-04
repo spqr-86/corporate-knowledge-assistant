@@ -1,10 +1,66 @@
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+from google.adk.memory.memory_entry import MemoryEntry
 from google.adk.models.llm_request import LlmRequest
 from google.genai import types
 
 from guardrails.context_perimeter import (
-    _first_user_text,
+    _last_user_text,
+    context_perimeter_guardrail,
     is_ambiguous_jurisdiction_query,
 )
+
+
+def _ambiguous_request() -> LlmRequest:
+    return LlmRequest(
+        model="gpt-4o-mini",
+        contents=[
+            types.Content(
+                role="user",
+                parts=[types.Part(text="What parental leave benefits do I get?")],
+            ),
+        ],
+    )
+
+
+def _callback_context(memories: list[str] | None = None, available: bool = True):
+    ctx = MagicMock()
+    if not available:
+        ctx.search_memory = AsyncMock(side_effect=ValueError("no memory service"))
+        return ctx
+    response = MagicMock()
+    response.memories = [
+        MemoryEntry(content=types.Content(role="user", parts=[types.Part(text=text)]))
+        for text in (memories or [])
+    ]
+    ctx.search_memory = AsyncMock(return_value=response)
+    return ctx
+
+
+@pytest.mark.asyncio
+async def test_guardrail_lets_ambiguous_query_through_when_memory_knows_country():
+    """If a past conversation named the country, the guardrail must NOT
+    short-circuit — the LLM gets the turn and recalls it via load_memory."""
+    ctx = _callback_context(memories=["I'm based in France."])
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_guardrail_short_circuits_when_memory_has_no_country():
+    ctx = _callback_context(memories=["I asked about stock options once."])
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_guardrail_short_circuits_when_memory_service_unavailable():
+    """No memory service (e.g. bare Runner in adk eval) must not crash the
+    guardrail — fall back to asking the clarifying question."""
+    ctx = _callback_context(available=False)
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is not None
 
 
 def test_flags_jurisdiction_sensitive_query_without_country():
@@ -86,7 +142,7 @@ def test_does_not_false_positive_on_country_code_substring():
     )
 
 
-def test_first_user_text_ignores_transfer_to_agent_synthesized_notes():
+def test_last_user_text_ignores_transfer_to_agent_synthesized_notes():
     """After Coordinator's transfer_to_agent, later 'user'-role contents are
     synthesized tool-transfer notes, not the real question — regression for
     a bug where the guardrail read those instead of the original question."""
@@ -109,4 +165,29 @@ def test_first_user_text_ignores_transfer_to_agent_synthesized_notes():
             ),
         ],
     )
-    assert _first_user_text(request) == "What parental leave benefits do I get?"
+    assert _last_user_text(request) == "What parental leave benefits do I get?"
+
+
+def test_last_user_text_returns_latest_turn_in_multi_turn_session():
+    """With a process-level session, request contents accumulate the whole
+    conversation history. The guardrail must judge the CURRENT question, not
+    forever re-judge turn 1 (which would either re-trigger after the user
+    already named their country, or miss a new ambiguous question)."""
+    request = LlmRequest(
+        model="gpt-4o-mini",
+        contents=[
+            types.Content(
+                role="user",
+                parts=[types.Part(text="What parental leave benefits do I get?")],
+            ),
+            types.Content(
+                role="model",
+                parts=[types.Part(text="Which country are you in?")],
+            ),
+            types.Content(
+                role="user",
+                parts=[types.Part(text="I'm in France.")],
+            ),
+        ],
+    )
+    assert _last_user_text(request) == "I'm in France."
