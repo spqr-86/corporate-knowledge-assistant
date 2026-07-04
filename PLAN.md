@@ -339,17 +339,17 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 
 Явный проверяемый чеклист — не "работает на глаз". Капстон готов к сдаче, когда:
 
-- [ ] Агент реально отвечает на вопросы live (не мок), через реальный ADK Runner + OpenAI API
-- [ ] Показаны 3+ концепции курса явно, не только "технически используются":
-  - [ ] ADK multi-agent (Coordinator + HR sub-agent) — работает end-to-end
-  - [ ] MCP-сервер — retrieval обёрнут как MCP tool, не просто внутренний FunctionTool
+- [x] Агент реально отвечает на вопросы live (не мок), через реальный ADK Runner + OpenAI API
+- [x] Показаны 3+ концепции курса явно, не только "технически используются":
+  - [x] ADK multi-agent (Coordinator + HR sub-agent) — работает end-to-end
+  - [x] MCP-сервер — retrieval обёрнут как MCP tool (`mcp_server/handbook_mcp_server.py`, `McpToolset`), не внутренний FunctionTool
   - [x] Agent Skill — `skills/compliance-guardrail/SKILL.md` реально читается/используется guardrail-логикой
-  - [ ] Security feature — guardrails именованы и работают как Context-as-a-Perimeter + Denial-of-Wallet защита
-- [ ] `pytest tests/ -v` — все тесты зелёные
-- [ ] Smoke-тест (`pytest -m smoke`) зелёный — воспроизводимый end-to-end прогон, не разовый ручной
-- [ ] `adk eval` прогнан хотя бы раз на golden dataset (5-10 кейсов) — результат зафиксирован (не обязательно 100%, но известен)
-- [ ] README.md с питчем (2 мин версия) + инструкция запуска для судей
-- [ ] Репозиторий запушен на GitHub (публичный или приватный — уточнить требование трека в письме)
+  - [x] Security feature — guardrails (`context_perimeter.py`, `dow_limit.py`) работают как Context-as-a-Perimeter + Denial-of-Wallet защита
+- [x] `pytest tests/ -v` — все тесты зелёные (51/51)
+- [x] Smoke-тест (`pytest -m smoke`) зелёный — воспроизводимый end-to-end прогон, не разовый ручной
+- [x] `adk eval` прогнан хотя бы раз на golden dataset (5-10 кейсов) — результат зафиксирован (18 кейсов, 18/18 tool_trajectory)
+- [x] README.md с питчем (2 мин версия) + инструкция запуска для судей (CLI + `adk web`)
+- [ ] Репозиторий запушен на GitHub (публичный или приватный — уточнить требование трека в письме) — сейчас приватный, сделать публичным перед сдачей
 - [ ] Лицензия/источник данных явно указаны (data/HANDBOOK_LICENSE, ссылка на исходный репо)
 
 Если что-то из списка не успеваем — явно вычеркнуть с пометкой "not in scope for capstone,
