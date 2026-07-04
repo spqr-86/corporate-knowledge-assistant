@@ -276,6 +276,15 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 - Формат MCP-сервера: локальный stdio-сервер для демо или что-то показательнее?
 - Multi-step orchestrator (п.7 stretch) — включать в основной демо-путь или как "если успеем"?
 
+## 14. Память (post-review, 04.07)
+
+Спека: `docs/superpowers/specs/2026-07-04-memory-design.md` (одобрена). Реализовано:
+- Session multi-turn: процессный Runner + session_id в ask(); CLI держит живую сессию, `/new` архивирует в память и стартует новую, выход тоже архивирует.
+- Cross-session: InMemoryMemoryService + load_memory tool у hr_domain_agent (Load, не Preload — видимый tool call в трейсе, ресёрч подтвердил что оба паттерна официальны).
+- Guardrail стал async и memory-aware: перед short-circuit проверяет search_memory; страна есть в памяти → пропускает к LLM. `_first_user_text` → `_last_user_text` (PLAUSIBLE-находка ревью стала бы реальным багом при multi-turn).
+- Пойманный при живых прогонах баг: правило 3 инструкции заставляло модель эскалировать при пустом load_memory даже когда страна была в вопросе (2/3 фейлов e2e) — разделил на правила 3/3a, 3/3 зелёные.
+- Закрывает 5-й компонент агента из Day1 (Memory). 44/44 тестов, adk eval 9/12 без регрессий.
+
 ## 13. Code review (post-DoD, до сдачи)
 
 Полный code-review (8 углов поиска + верификация каждой находки) после закрытия всех пунктов плана. 5 подтверждённых находок, все исправлены:

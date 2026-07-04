@@ -50,6 +50,7 @@ enforced deterministically, not left to the model's judgment.
 | **MCP server** | `mcp_server/handbook_mcp_server.py` — retrieval exposed over stdio MCP (FastMCP), consumed via ADK's `McpToolset`, not an internal `FunctionTool` |
 | **Security guardrails** | `guardrails/context_perimeter.py` (Context-as-a-Perimeter) + `guardrails/dow_limit.py` (Denial-of-Wallet) — both `before_model_callback`/`before_tool_callback`, deterministic code, not LLM-judged |
 | **HITL as action** | `tools/create_hr_ticket.py` — escalation produces a logged ticket artifact, not a vague refusal |
+| **Memory** (Day1's 5th agent component) | Process-level session service (multi-turn) + `InMemoryMemoryService` with the `load_memory` tool (cross-session recall, visible as a tool call in the trace); `/new` in the CLI archives a conversation to memory |
 
 ---
 
@@ -94,6 +95,7 @@ Try it:
 - `"What parental leave benefits does GitLab offer in France?"` → answered with handbook citations
 - `"I want to request PTO from 2026-08-10 to 2026-08-14 for a family trip."` → PTO draft (never auto-submitted)
 - `"What is GitLab's office dog policy?"` → no match in the handbook → escalated to a logged HR ticket
+- Memory demo (one process run): `"What parental leave benefits do I get?"` → asked for your country → `"I'm in France."` → cited answer; then `/new` and ask `"What are my parental leave benefits?"` → the agent recalls France from memory (`load_memory` call in the trace) instead of re-asking
 
 ---
 
