@@ -13,6 +13,7 @@ Output: bool (pure detector) / Optional[LlmResponse] (ADK hook — None lets
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_request import LlmRequest
@@ -22,38 +23,33 @@ from google.genai import types
 from text_utils import tokenize
 
 
-_JURISDICTION_SENSITIVE_TERMS = {
-    "leave",
-    "benefit",
-    "benefits",
-    "parental",
-    "insurance",
-    "holiday",
-    "vacation",
-    "pto",
-}
+# Escalation criteria live in the compliance-guardrail Agent Skill
+# (skills/compliance-guardrail/ — SKILL.md + references/, Day3 progressive-
+# disclosure pattern), not hardcoded here: edit a reference file to change
+# behavior, no Python change needed.
+_SKILL_REFERENCES = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "compliance-guardrail"
+    / "references"
+)
+
+
+def _load_reference(filename: str) -> frozenset[str]:
+    lines = (_SKILL_REFERENCES / filename).read_text(encoding="utf-8").splitlines()
+    return frozenset(line.strip().lower() for line in lines if line.strip())
+
+
+_JURISDICTION_SENSITIVE_TERMS = _load_reference("jurisdiction_sensitive_terms.txt")
 
 # Single-word country names/codes must match a whole tokenized word — "us"
 # is a substring of "just", so plain `in lower` containment false-positives.
-# "us" itself is excluded here (see _COUNTRY_CODE_US_RE below) — it's also a
-# common English pronoun ("offered to us"), so case-insensitive whole-word
-# matching alone still false-positives.
-_KNOWN_COUNTRIES_SINGLE_WORD = {
-    "france",
-    "uk",
-    "canada",
-    "singapore",
-    "korea",
-    "australia",
-    "ireland",
-    "belgium",
-    "netherlands",
-    "finland",
-    "usa",
-    "india",
-}
+# "us" itself is excluded from the reference file (see _COUNTRY_CODE_US_RE
+# below) — it's also a common English pronoun ("offered to us"), so
+# case-insensitive whole-word matching alone still false-positives.
+_KNOWN_COUNTRIES_SINGLE_WORD = _load_reference("countries_single_word.txt")
 # Multi-word names can't be single tokens, so a substring check is safe here.
-_KNOWN_COUNTRIES_MULTI_WORD = {"united kingdom", "new zealand", "united states"}
+_KNOWN_COUNTRIES_MULTI_WORD = _load_reference("countries_multi_word.txt")
 
 # Only an uppercase standalone "US" counts as the country code — lowercase
 # "us" is far more often the pronoun than the country in normal writing.
@@ -110,9 +106,16 @@ def _text_names_known_country(text: str) -> bool:
 
 
 async def _memory_knows_country(callback_context: CallbackContext) -> bool:
-    """True if a past conversation in memory names the user's country."""
+    """True if a past conversation in memory names the user's country.
+
+    The query is the country names themselves, not the word "country" —
+    keyword-matching memory backends (InMemoryMemoryService) match query
+    words against stored text, and a user saying "I'm based in France"
+    never says the word "country".
+    """
+    query = " ".join(sorted(_KNOWN_COUNTRIES_SINGLE_WORD | _KNOWN_COUNTRIES_MULTI_WORD))
     try:
-        response = await callback_context.search_memory("user country entity location")
+        response = await callback_context.search_memory(query)
     except ValueError:  # no memory service wired (e.g. bare adk eval Runner)
         return False
     for memory in response.memories:

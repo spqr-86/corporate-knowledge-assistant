@@ -1,0 +1,12 @@
+france
+uk
+canada
+singapore
+korea
+australia
+ireland
+belgium
+netherlands
+finland
+usa
+india
