@@ -127,6 +127,19 @@ python3 agent.py       # interactive CLI loop
 pytest tests/ -v       # 26 tests: unit + smoke (live model calls, needs OPENAI_API_KEY)
 ```
 
+### Web UI (for judges)
+
+The CLI is the only custom-built interface, but ADK ships a web UI for free —
+no extra code, just point it at the same `root_agent` used everywhere else
+(reusing `eval/agent_target/`, the shim already required by `adk eval`):
+
+```bash
+adk web eval   # opens http://127.0.0.1:8000, agent name shown as "agent_target"
+```
+
+Chat, tool-call trace and session state are inspectable in the browser —
+easier for a judge to drive than the CLI.
+
 Try it:
 - `"What parental leave benefits do I get?"` → guardrail asks which country/entity you're in
 - `"What parental leave benefits does GitLab offer in France?"` → answered with handbook citations
