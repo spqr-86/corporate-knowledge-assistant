@@ -23,21 +23,27 @@ async def test_mcp_search_handbook_returns_results_for_known_topic():
 
 
 @pytest.mark.asyncio
-async def test_mcp_tool_schema_does_not_expose_role_parameter():
-    """role must not be an LLM-settable argument — mock RBAC would be a
-    no-op security boundary if any caller could just pass role='manager'."""
-    tools = await mcp.list_tools()
-    tool = next(t for t in tools if t.name == "search_handbook")
-    assert "role" not in tool.inputSchema.get("properties", {})
+async def test_mcp_search_handbook_defaults_to_employee_role():
+    """role defaults to employee when the caller doesn't specify one — the
+    MCP layer trusts its caller's role argument (see docstring); the actual
+    LLM-exploit defense lives one layer up in
+    guardrails/role_binding.py's before_tool_callback, which always
+    overwrites this arg from session state before it ever reaches here."""
+    content_blocks = await mcp.call_tool(
+        "search_handbook", {"query": "compensation review cycle"}
+    )
+    structured = json.loads(content_blocks[0].text)
+    assert all("compensation" not in r["relative_path"] for r in structured["results"])
 
 
 @pytest.mark.asyncio
-async def test_mcp_search_handbook_ignores_role_passed_by_caller():
-    """Even if a caller sneaks a 'role' kwarg into the call, it must not
-    grant access to restricted (manager+) docs."""
+async def test_mcp_search_handbook_respects_explicit_role_argument():
+    """A trusted caller (the role_binding callback) can legitimately grant
+    manager-level access by passing role='manager' — this layer's job is
+    just to honor whatever role it's given, not to authenticate it."""
     content_blocks = await mcp.call_tool(
         "search_handbook",
         {"query": "compensation review cycle", "role": "manager"},
     )
     structured = json.loads(content_blocks[0].text)
-    assert all("compensation" not in r["relative_path"] for r in structured["results"])
+    assert any("compensation" in r["relative_path"] for r in structured["results"])

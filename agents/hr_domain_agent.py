@@ -22,6 +22,7 @@ from mcp import StdioServerParameters
 
 from guardrails.context_perimeter import context_perimeter_guardrail
 from guardrails.dow_limit import dow_guardrail
+from guardrails.role_binding import bind_role_from_session
 from tools.create_hr_ticket import create_hr_ticket
 from tools.draft_pto_request import draft_pto_request
 
@@ -77,5 +78,5 @@ Rules:
 """,
     tools=[handbook_mcp_toolset, draft_pto_tool, create_ticket_tool],
     before_model_callback=context_perimeter_guardrail,
-    before_tool_callback=dow_guardrail,
+    before_tool_callback=[bind_role_from_session, dow_guardrail],
 )

@@ -41,10 +41,16 @@ sub-agent exists yet, say this assistant currently only covers HR topics.
 )
 
 
-async def ask(question: str) -> str:
+async def ask(question: str, role: str = "employee") -> str:
+    """role: the requesting user's role (employee/manager/hr_admin), set
+    once at session creation from a trusted context — never derived from
+    the model's own tool-call arguments (see guardrails/role_binding.py)."""
     session_service = InMemorySessionService()
     await session_service.create_session(
-        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
+        app_name=APP_NAME,
+        user_id=USER_ID,
+        session_id=SESSION_ID,
+        state={"user_role": role},
     )
     runner = Runner(
         agent=root_agent, app_name=APP_NAME, session_service=session_service
@@ -65,7 +71,8 @@ async def main() -> None:
         raise RuntimeError(
             "OPENAI_API_KEY not set. Export it before running: export OPENAI_API_KEY=sk-..."
         )
-    print(f"{APP_NAME} — ask a question (Ctrl+C to exit)")
+    role = os.environ.get("USER_ROLE", "employee")
+    print(f"{APP_NAME} — ask a question as role={role} (Ctrl+C to exit)")
     while True:
         try:
             question = input("\nYou: ").strip()
@@ -73,7 +80,7 @@ async def main() -> None:
             break
         if not question:
             continue
-        answer = await ask(question)
+        answer = await ask(question, role=role)
         print(f"\nAgent: {answer}")
 
 
