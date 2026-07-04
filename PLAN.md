@@ -297,6 +297,21 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 
 35/35 тестов зелёные, живой прогон подтверждён (RBAC bypass закрыт и фича осталась демонстрируемой, "take leave" с датами доходит до draft_pto_request).
 
+## 15. Observability + CPS (04.07, по итогам ревизии плана ШАД→капстон)
+
+Добавлено по итогам сверки с `shad_to_projects_plan.md` (production engineering, лекция 5.1):
+
+- `observability.py` — `TurnObserver`: structlog-лог на каждый шаг (tool_name, args, latency_s,
+  decision_reason) + накопление токенов за turn, `cost_usd()` по прайсингу gpt-4o-mini. TDD:
+  `tests/test_observability.py`, 4 теста зелёные, фейки вместо реальных ADK Event.
+- `agent.py`'s `ask()` — заводит `TurnObserver` на каждый вызов, кладёт в module-level
+  `last_turn_observer` (читает `scripts/compute_cps.py`).
+- `scripts/compute_cps.py` — живой прогон 3 вопросов, печатает CPS. Измерено: **~$0.0004/query**,
+  2-3 шага за turn — цифра в README (раздел "Observability & cost").
+- 48/48 тестов зелёные (44 было + 4 новых), smoke-тест не сломан.
+- Не стали делать: Model Router (в капстоне нет явного разброса простой/сложный запрос как в
+  SIA), полноценный OTel — не окупится за оставшееся время.
+
 ## 12. Definition of Done (капстон сдан)
 
 Явный проверяемый чеклист — не "работает на глаз". Капстон готов к сдаче, когда:

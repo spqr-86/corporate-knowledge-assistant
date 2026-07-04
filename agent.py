@@ -24,6 +24,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from agents.hr_domain_agent import hr_domain_agent
+from observability import TurnObserver
 
 APP_NAME = "corporate_knowledge_assistant"
 USER_ID = "petr"
@@ -96,22 +97,33 @@ async def save_session_to_memory(session_id: str) -> None:
         await runner.memory_service.add_session_to_memory(session)
 
 
+last_turn_observer: TurnObserver | None = None
+
+
 async def ask(
     question: str, role: str = "employee", session_id: str = SESSION_ID
 ) -> str:
     """role: the requesting user's role (employee/manager/hr_admin), set
     once at session creation from a trusted context — never derived from
-    the model's own tool-call arguments (see guardrails/role_binding.py)."""
+    the model's own tool-call arguments (see guardrails/role_binding.py).
+
+    Records a structlog step per tool call/final response and accumulates
+    token usage for the turn in `last_turn_observer` (module-level, read by
+    scripts/compute_cps.py) — see observability.py."""
+    global last_turn_observer
     await ensure_session(session_id, role=role)
     runner = get_runner()
+    observer = TurnObserver()
 
     content = types.Content(role="user", parts=[types.Part(text=question)])
     final_text = ""
     async for event in runner.run_async(
         user_id=USER_ID, session_id=session_id, new_message=content
     ):
+        observer.record(event)
         if event.is_final_response() and event.content and event.content.parts:
             final_text = event.content.parts[0].text or ""
+    last_turn_observer = observer
     return final_text
 
 

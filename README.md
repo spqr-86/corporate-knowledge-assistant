@@ -76,6 +76,22 @@ adk eval eval/agent_target eval/eval_set.json --config_file_path eval/eval_confi
 
 ---
 
+## Observability & cost
+
+`observability.py`'s `TurnObserver` logs a structured (structlog) line per step of every turn —
+`tool_name`, `args`, `latency_s`, `decision_reason` — and accumulates token usage to compute an
+approximate cost per query against gpt-4o-mini list pricing.
+
+```bash
+python3 scripts/compute_cps.py   # runs 3 sample questions, prints per-query and average cost
+```
+
+Measured on 3 representative questions (routing + retrieval, short lookup, action-tool draft):
+**~$0.0004/query average**, 2-3 steps per turn. Cheap enough that the guardrail's Denial-of-Wallet
+cap (session tool-call limit) is about runaway loops, not per-query price.
+
+---
+
 ## Quick start
 
 ```bash
