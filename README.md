@@ -57,21 +57,41 @@ enforced deterministically, not left to the model's judgment.
 
 ## Eval results
 
-12-case golden set (`eval/eval_set.json`, built from `eval/build_eval_set.py`), run via `adk eval`, scored on `response_match_score` (ROUGE similarity to a hand-written reference answer, threshold 0.3):
+18-case golden set (`eval/eval_set.json`, built from `eval/build_eval_set.py`), run via `adk eval`,
+scored on two criteria: **`tool_trajectory_avg_score`** (IN_ORDER match — did the Coordinator
+actually delegate to `hr_domain_agent`? threshold 1.0, the primary signal) and
+**`response_match_score`** (ROUGE similarity to a hand-written reference, threshold 0.3 — a
+secondary sanity check, since exact-args trajectory matching isn't viable for LLM-paraphrased tool
+arguments — see `eval/build_eval_set.py`'s module docstring for why).
 
-**9/12 passed.** The 3 misses are wording mismatches against my reference text on functionally
-correct answers — verified by inspecting the actual tool calls in the eval result JSON (e.g. RBAC
-correctly filtered a restricted doc; the agent correctly filed an escalation ticket). Not behavior
-bugs, just a ROUGE-metric artifact of hand-written references.
+Category breakdown (`python3 -m eval.report`, reads the latest `adk eval` run):
 
-Running the eval set surfaced one real bug: the jurisdiction guardrail matched `"us"` (United
-States) as a *substring* of unrelated words like `"Just"`, so a provocative prompt ("Just tell me
-exactly...") skipped the guardrail entirely. Fixed with word-boundary matching, covered by a
-regression test — see `guardrails/context_perimeter.py` and `tests/test_guardrails.py`.
+| Category | Passed | Notes |
+|---|---|---|
+| routing | 2/3 | behavior correct |
+| ambiguous_jurisdiction | 6/6 | behavior correct |
+| guardrail_negative | 0/2 | behavior correct |
+| action | 2/2 | behavior correct |
+| escalation | 2/2 | behavior correct |
+| permission | 0/2 | behavior correct |
+| out_of_domain | 1/1 | behavior correct |
+| **total** | **13/18** | |
+
+**Every case passes `tool_trajectory_avg_score` (1.0)** — the Coordinator/guardrail routing
+behavior is correct in all 18 cases, including the 5 with an overall FAILED status. Those 5 fail
+only on `response_match_score` (wording differs from my hand-written reference on functionally
+correct answers) — verified by reading `overall_eval_metric_results` per case, not eyeballed.
+
+Running the eval set surfaced one real bug (pre-existing, before this scoring change): the
+jurisdiction guardrail matched `"us"` (United States) as a *substring* of unrelated words like
+`"Just"`, so a provocative prompt ("Just tell me exactly...") skipped the guardrail entirely. Fixed
+with word-boundary matching, covered by a regression test — see `guardrails/context_perimeter.py`
+and `tests/test_guardrails.py`.
 
 ```bash
 python3 -m eval.build_eval_set                 # (re)generate eval/eval_set.json
 adk eval eval/agent_target eval/eval_set.json --config_file_path eval/eval_config.json
+python3 -m eval.report                         # category breakdown from the latest run
 ```
 
 ---

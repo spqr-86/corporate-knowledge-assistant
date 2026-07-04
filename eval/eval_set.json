@@ -1,7 +1,7 @@
 {
   "eval_set_id": "corporate_knowledge_assistant_golden_set",
   "name": "Corporate Knowledge Assistant \u2014 golden eval set",
-  "description": "Covers routing, jurisdiction-ambiguity guardrail, action tools (draft_pto_request), HITL escalation (create_hr_ticket) and permission-aware retrieval.",
+  "description": "Covers routing, jurisdiction-ambiguity guardrail (positive and negative cases), action tools (draft_pto_request), HITL escalation (create_hr_ticket), permission-aware retrieval and out-of-domain refusal.",
   "eval_cases": [
     {
       "eval_id": "routing_parental_leave_us",
@@ -50,7 +50,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -109,7 +123,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -168,7 +196,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -227,7 +269,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -286,7 +342,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -345,7 +415,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -358,7 +442,7 @@
       "final_session_state": {}
     },
     {
-      "eval_id": "action_draft_pto_valid",
+      "eval_id": "ambiguous_maternity_no_country",
       "conversation": [
         {
           "invocation_id": "",
@@ -372,7 +456,7 @@
                 "function_call": null,
                 "function_response": null,
                 "inline_data": null,
-                "text": "I want to request PTO from 2026-08-10 to 2026-08-14 for a family trip.",
+                "text": "Do I get maternity leave?",
                 "thought": null,
                 "thought_signature": null,
                 "video_metadata": null,
@@ -393,7 +477,7 @@
                 "function_call": null,
                 "function_response": null,
                 "inline_data": null,
-                "text": "Here is your PTO request draft: dates 2026-08-10 to 2026-08-14, reason family trip. This is a draft \u2014 please review and submit it yourself via the HR portal.",
+                "text": "This depends on your country or entity \u2014 GitLab's HR policies vary by location. Could you tell me which country or entity you're in?",
                 "thought": null,
                 "thought_signature": null,
                 "video_metadata": null,
@@ -404,7 +488,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -417,7 +515,7 @@
       "final_session_state": {}
     },
     {
-      "eval_id": "action_draft_pto_short_trip",
+      "eval_id": "ambiguous_pet_insurance_no_country",
       "conversation": [
         {
           "invocation_id": "",
@@ -431,7 +529,7 @@
                 "function_call": null,
                 "function_response": null,
                 "inline_data": null,
-                "text": "Please draft a PTO request for 2026-09-01 to 2026-09-02, reason: doctor appointment.",
+                "text": "What is GitLab's policy on pet insurance reimbursement?",
                 "thought": null,
                 "thought_signature": null,
                 "video_metadata": null,
@@ -452,7 +550,7 @@
                 "function_call": null,
                 "function_response": null,
                 "inline_data": null,
-                "text": "Here is your PTO request draft: dates 2026-09-01 to 2026-09-02, reason doctor appointment. This is a draft \u2014 please review and submit it yourself via the HR portal.",
+                "text": "This depends on your country or entity \u2014 GitLab's HR policies vary by location. Could you tell me which country or entity you're in?",
                 "thought": null,
                 "thought_signature": null,
                 "video_metadata": null,
@@ -463,184 +561,21 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
-          "creation_timestamp": 0.0,
-          "rubrics": null,
-          "app_details": null
-        }
-      ],
-      "conversation_scenario": null,
-      "session_input": null,
-      "creation_timestamp": 0.0,
-      "rubrics": null,
-      "final_session_state": {}
-    },
-    {
-      "eval_id": "escalation_no_handbook_match",
-      "conversation": [
-        {
-          "invocation_id": "",
-          "user_content": {
-            "parts": [
+          "intermediate_data": {
+            "tool_uses": [
               {
-                "media_resolution": null,
-                "code_execution_result": null,
-                "executable_code": null,
-                "file_data": null,
-                "function_call": null,
-                "function_response": null,
-                "inline_data": null,
-                "text": "What is GitLab's office dog policy?",
-                "thought": null,
-                "thought_signature": null,
-                "video_metadata": null,
-                "tool_call": null,
-                "tool_response": null,
-                "part_metadata": null
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
               }
             ],
-            "role": "user"
+            "tool_responses": [],
+            "intermediate_responses": []
           },
-          "final_response": {
-            "parts": [
-              {
-                "media_resolution": null,
-                "code_execution_result": null,
-                "executable_code": null,
-                "file_data": null,
-                "function_call": null,
-                "function_response": null,
-                "inline_data": null,
-                "text": "I couldn't find this in the handbook. I've created a ticket for HR to review your question.",
-                "thought": null,
-                "thought_signature": null,
-                "video_metadata": null,
-                "tool_call": null,
-                "tool_response": null,
-                "part_metadata": null
-              }
-            ],
-            "role": "model"
-          },
-          "intermediate_data": null,
-          "creation_timestamp": 0.0,
-          "rubrics": null,
-          "app_details": null
-        }
-      ],
-      "conversation_scenario": null,
-      "session_input": null,
-      "creation_timestamp": 0.0,
-      "rubrics": null,
-      "final_session_state": {}
-    },
-    {
-      "eval_id": "escalation_unrelated_topic",
-      "conversation": [
-        {
-          "invocation_id": "",
-          "user_content": {
-            "parts": [
-              {
-                "media_resolution": null,
-                "code_execution_result": null,
-                "executable_code": null,
-                "file_data": null,
-                "function_call": null,
-                "function_response": null,
-                "inline_data": null,
-                "text": "What is GitLab's policy on company car allowances for sales reps?",
-                "thought": null,
-                "thought_signature": null,
-                "video_metadata": null,
-                "tool_call": null,
-                "tool_response": null,
-                "part_metadata": null
-              }
-            ],
-            "role": "user"
-          },
-          "final_response": {
-            "parts": [
-              {
-                "media_resolution": null,
-                "code_execution_result": null,
-                "executable_code": null,
-                "file_data": null,
-                "function_call": null,
-                "function_response": null,
-                "inline_data": null,
-                "text": "I couldn't find this in the handbook. I've created a ticket for HR to review your question.",
-                "thought": null,
-                "thought_signature": null,
-                "video_metadata": null,
-                "tool_call": null,
-                "tool_response": null,
-                "part_metadata": null
-              }
-            ],
-            "role": "model"
-          },
-          "intermediate_data": null,
-          "creation_timestamp": 0.0,
-          "rubrics": null,
-          "app_details": null
-        }
-      ],
-      "conversation_scenario": null,
-      "session_input": null,
-      "creation_timestamp": 0.0,
-      "rubrics": null,
-      "final_session_state": {}
-    },
-    {
-      "eval_id": "permission_compensation_review_employee",
-      "conversation": [
-        {
-          "invocation_id": "",
-          "user_content": {
-            "parts": [
-              {
-                "media_resolution": null,
-                "code_execution_result": null,
-                "executable_code": null,
-                "file_data": null,
-                "function_call": null,
-                "function_response": null,
-                "inline_data": null,
-                "text": "Can you show me the compensation review cycle details?",
-                "thought": null,
-                "thought_signature": null,
-                "video_metadata": null,
-                "tool_call": null,
-                "tool_response": null,
-                "part_metadata": null
-              }
-            ],
-            "role": "user"
-          },
-          "final_response": {
-            "parts": [
-              {
-                "media_resolution": null,
-                "code_execution_result": null,
-                "executable_code": null,
-                "file_data": null,
-                "function_call": null,
-                "function_response": null,
-                "inline_data": null,
-                "text": "Compensation review cycle details are restricted and not available at the employee access level \u2014 please check with your manager or HR.",
-                "thought": null,
-                "thought_signature": null,
-                "video_metadata": null,
-                "tool_call": null,
-                "tool_response": null,
-                "part_metadata": null
-              }
-            ],
-            "role": "model"
-          },
-          "intermediate_data": null,
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null
@@ -699,7 +634,668 @@
             ],
             "role": "model"
           },
-          "intermediate_data": null,
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "guardrail_negative_country_given",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What paid holiday does GitLab offer in the UK?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "A country was named (UK), so the guardrail must not ask for clarification \u2014 retrieval runs and either answers or escalates if the handbook has no match.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "guardrail_negative_hiring_process",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What is GitLab's hiring process for remote candidates?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Not a jurisdiction-sensitive topic, so the guardrail must not ask for clarification \u2014 retrieval runs directly.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "action_draft_pto_valid",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "I want to request PTO from 2026-08-10 to 2026-08-14 for a family trip.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Here is your PTO request draft: dates 2026-08-10 to 2026-08-14, reason family trip. This is a draft \u2014 please review and submit it yourself via the HR portal.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "action_draft_pto_short_trip",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Please draft a PTO request for 2026-09-01 to 2026-09-02, reason: doctor appointment.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Here is your PTO request draft: dates 2026-09-01 to 2026-09-02, reason doctor appointment. This is a draft \u2014 please review and submit it yourself via the HR portal.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "escalation_no_handbook_match",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What is GitLab's office dog policy?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "I couldn't find this in the handbook. I've created a ticket for HR to review your question.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "escalation_unrelated_topic",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "What is GitLab's policy on company car allowances for sales reps?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "I couldn't find this in the handbook. I've created a ticket for HR to review your question.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "permission_compensation_review_employee",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Can you show me the compensation review cycle details?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Compensation review cycle details are restricted and not available at the employee access level \u2014 please check with your manager or HR.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "permission_salary_benchmarking",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "How does GitLab determine total rewards and compensation for a role?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "GitLab's total rewards/compensation approach is described in the handbook's compensation documentation.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "id": null,
+                "args": {
+                  "agent_name": "hr_domain_agent"
+                },
+                "name": "transfer_to_agent",
+                "partial_args": null,
+                "will_continue": null
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0,
+          "rubrics": null,
+          "app_details": null
+        }
+      ],
+      "conversation_scenario": null,
+      "session_input": null,
+      "creation_timestamp": 0.0,
+      "rubrics": null,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "out_of_domain_deploy",
+      "conversation": [
+        {
+          "invocation_id": "",
+          "user_content": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "Can you help me deploy the production database migration?",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "media_resolution": null,
+                "code_execution_result": null,
+                "executable_code": null,
+                "file_data": null,
+                "function_call": null,
+                "function_response": null,
+                "inline_data": null,
+                "text": "This assistant currently only covers HR topics.",
+                "thought": null,
+                "thought_signature": null,
+                "video_metadata": null,
+                "tool_call": null,
+                "tool_response": null,
+                "part_metadata": null
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
           "creation_timestamp": 0.0,
           "rubrics": null,
           "app_details": null

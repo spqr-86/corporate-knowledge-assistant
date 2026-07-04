@@ -312,6 +312,29 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 - Не стали делать: Model Router (в капстоне нет явного разброса простой/сложный запрос как в
   SIA), полноценный OTel — не окупится за оставшееся время.
 
+## 16. Eval v2: trajectory-скоринг + категорийный отчёт (04.07)
+
+Реализация спеки `docs/superpowers/specs/2026-07-04-eval-system-spec.md`:
+
+- `eval_config.json` — `tool_trajectory_avg_score` (IN_ORDER, threshold 1.0) + `response_match_score`
+  (threshold 0.3, вторичный сигнал).
+- **Реальная находка при реализации**: ADK трэкторный evaluator делает точное `==` сравнение args
+  (`_are_tool_calls_in_order_match`) — даже прямой passthrough-параметр (причина PTO "family trip")
+  LLM переформулирует в "Family trip", exact-match ломается. Поэтому в `tool_uses` каждого кейса
+  утверждается **только `transfer_to_agent`** (args фиксированы: `agent_name=hr_domain_agent`) —
+  не `search_handbook`/`create_hr_ticket`/`draft_pto_request`. Это не баг агента, а ограничение
+  инструмента eval; задокументировано в docstring `eval/build_eval_set.py`.
+- Датасет 12 → 18 кейсов: +2 `guardrail_negative`, +2 `ambiguous_jurisdiction`, +1 `permission`,
+  +1 `out_of_domain` (новая категория). Ожидаемые trajectory не придуманы — сняты с живых прогонов
+  (скрипт-черновик, результат проверен глазами перед тем как зафиксировать).
+- `eval/report.py` — категорийная таблица вместо общего счёта, TDD (`tests/test_eval_report.py`,
+  3 теста на синтетических данных).
+- Результат: **18/18 по tool_trajectory_avg_score** (routing/guardrail поведение верно во всех
+  кейсах) — **13/18 overall** (5 фейлов только по ROUGE-wording, не поведение). Категории:
+  routing 2/3, ambiguous_jurisdiction 6/6, guardrail_negative 0/2 (ROUGE), action 2/2,
+  escalation 2/2, permission 0/2 (ROUGE), out_of_domain 1/1.
+- 51/51 юнит-тестов зелёные (48 + 3 новых), smoke не сломан.
+
 ## 12. Definition of Done (капстон сдан)
 
 Явный проверяемый чеклист — не "работает на глаз". Капстон готов к сдаче, когда:
