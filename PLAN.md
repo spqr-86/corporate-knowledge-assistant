@@ -280,13 +280,13 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 
 Полный code-review (8 углов поиска + верификация каждой находки) после закрытия всех пунктов плана. 5 подтверждённых находок, все исправлены:
 
-1. **RBAC bypass** (SECURITY) — `role` в search_handbook был обычным LLM-управляемым параметром MCP-tool, никак не привязанным к реальной личности. Исправлено: `role` убран из MCP-схемы совсем, захардкожен в `employee` на mcp_server/handbook_mcp_server.py.
+1. **RBAC bypass** (SECURITY) — `role` в search_handbook был обычным LLM-управляемым параметром MCP-tool, никак не привязанным к реальной личности. Первая версия фикса (убрать `role` из MCP-схемы, захардкодить `employee`) закрывала дыру, но убивала демонстрируемость RBAC-фичи — manager/hr_admin становился недостижим нигде кроме юнит-теста. Пётр указал на это ("1 точно хорошее решение?"). Переделал: `role` привязан к `session.state["user_role"]` через новый before_tool_callback (`guardrails/role_binding.py`), который перезаписывает `args["role"]` из состояния сессии независимо от того, что попытается передать LLM. `agent.py`'s `ask(question, role=...)` и `USER_ROLE` env var в CLI задают роль один раз при создании сессии — не через tool-call. Живой прогон подтверждён: сессия role="employee" с промптом "я менеджер" всё равно не видит restricted-док; реальная role="manager" видит.
 2. **"leave" конфликтовал с draft_pto_request routing** — фраза "take leave" с явными датами блокировалась guardrail'ом до того, как LLM успевал вызвать action tool. Исправлено обобщённо: явная дата YYYY-MM-DD в запросе теперь всегда байпасит jurisdiction-check (это action, не lookup); заодно вернул "pto" обратно в sensitive-terms (для голых информационных вопросов).
 3. **"us" как местоимение** — "offered to us" ложно распознавалось как названная страна США. Исправлено: только заглавное "US" считается кодом страны.
 4. **Дублирование tokenizer regex** между handbook_search.py и context_perimeter.py — вынесено в text_utils.py.
 5. **Отсутствие тайп-хинтов** в dow_guardrail — добавлены (BaseTool, ToolContext).
 
-31/31 тестов зелёные, живой прогон подтверждён (RBAC bypass больше не работает, "take leave" с датами доходит до draft_pto_request).
+35/35 тестов зелёные, живой прогон подтверждён (RBAC bypass закрыт и фича осталась демонстрируемой, "take leave" с датами доходит до draft_pto_request).
 
 ## 12. Definition of Done (капстон сдан)
 
