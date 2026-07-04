@@ -16,6 +16,20 @@ This project is a minimal but end-to-end counter-example: retrieval that knows w
 
 ---
 
+## Try it in 60 seconds
+
+Open the web UI (`adk web eval`, see [Quick start](#quick-start)) and either say "hi" — the
+agent introduces itself and suggests questions — or ask directly:
+
+- `"What parental leave benefits does GitLab offer in France?"` → answered with handbook citations
+- `"What parental leave benefits do I get?"` (no country) → guardrail asks which country/entity you're in, instead of guessing
+- `"I want to request PTO from 2026-08-10 to 2026-08-14 for a family trip."` → PTO draft (never auto-submitted)
+- `"What is GitLab's office dog policy?"` → no match in the handbook → escalated to a logged HR ticket
+
+Data is a real subset of the [GitLab Handbook](https://gitlab.com/gitlab-com/content-sites/handbook) (MIT) — see [Data](#data).
+
+---
+
 ## How it works
 
 ```
