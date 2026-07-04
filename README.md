@@ -49,6 +49,7 @@ enforced deterministically, not left to the model's judgment.
 | **ADK multi-agent** | `agent.py` Coordinator delegates to `agents/hr_domain_agent.py` via `sub_agents`/`transfer_to_agent` |
 | **MCP server** | `mcp_server/handbook_mcp_server.py` — retrieval exposed over stdio MCP (FastMCP), consumed via ADK's `McpToolset`, not an internal `FunctionTool` |
 | **Security guardrails** | `guardrails/context_perimeter.py` (Context-as-a-Perimeter) + `guardrails/dow_limit.py` (Denial-of-Wallet) — both `before_model_callback`/`before_tool_callback`, deterministic code, not LLM-judged |
+| **Agent Skill** | `skills/compliance-guardrail/` — SKILL.md + `references/` (progressive disclosure); the guardrail loads its escalation criteria from the skill's reference files, so behavior changes by editing markdown/text, not Python |
 | **HITL as action** | `tools/create_hr_ticket.py` — escalation produces a logged ticket artifact, not a vague refusal |
 | **Memory** (Day1's 5th agent component) | Process-level session service (multi-turn) + `InMemoryMemoryService` with the `load_memory` tool (cross-session recall, visible as a tool call in the trace); `/new` in the CLI archives a conversation to memory |
 

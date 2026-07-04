@@ -129,13 +129,13 @@ testing — не окупятся за 1.5 оставшихся дня, судь
 |---|---|---|
 | Day1 | Harness = Agent, context engineering | Router/guardrail-дизайн — это и есть harness |
 | Day2 | MCP как протокол (USB-C аналогия) | MCP-обёртка над retrieval в плане |
-| Day3 | Agent Skills (SKILL.md + прогрессивное раскрытие) | **ДЫРА — не оформлено как настоящая структура** |
-| Day4 | Security: Effective Trust, Context-as-a-Perimeter, Denial-of-Wallet | Guardrail есть механически, нет терминологии/DoW-защиты |
+| Day3 | Agent Skills (SKILL.md + прогрессивное раскрытие) | ✅ `skills/compliance-guardrail/` (04.07) — SKILL.md + references/, guardrail загружает критерии оттуда |
+| Day4 | Security: Effective Trust, Context-as-a-Perimeter, Denial-of-Wallet | ✅ guardrails/ — оба callback'а именованы терминами курса |
 | Day5 | Spec-Driven Development | PLAN.md и есть спека — уже верно по духу |
 
 **Приоритет №1 (быстрые правки для явного соответствия, перед остальной доработкой):**
 
-1. [ ] Оформить guardrail-логику как настоящую Agent Skill по паттерну Day3:
+1. [x] (сделано 04.07 — SKILL.md + references/*.txt, guardrail читает списки из файлов; scripts/ не понадобился, детерминированный код остался в guardrails/) Оформить guardrail-логику как настоящую Agent Skill по паттерну Day3:
    ```
    skills/compliance-guardrail/
    ├── SKILL.md          # YAML frontmatter + инструкции когда эскалировать/отказывать
@@ -144,7 +144,7 @@ testing — не окупятся за 1.5 оставшихся дня, судь
    ```
    Загружается по требованию (не в основном system prompt) — прогрессивное раскрытие, не context rot.
 
-2. [ ] Явно назвать security-слой терминами курса в README/питче:
+2. [x] (сделано — README таблица концепций) Явно назвать security-слой терминами курса в README/питче:
    - Guardrail = реализация **Context-as-a-Perimeter** (Day4): агент проверяет контекст запроса (страна, тип вопроса), не полагается на статичный RBAC
    - Добавить простую защиту от **Denial-of-Wallet** (Day4): rate-limit / max-iterations на agent loop, чтобы предотвратить дорогостоящие бесконечные петли — механика простая (счётчик вызовов LLM/tool за сессию), но явно называется термином курса
 
@@ -305,7 +305,7 @@ ADK multi-agent, MCP-сервер, Agent Skills (SKILL.md), security features (C
 - [ ] Показаны 3+ концепции курса явно, не только "технически используются":
   - [ ] ADK multi-agent (Coordinator + HR sub-agent) — работает end-to-end
   - [ ] MCP-сервер — retrieval обёрнут как MCP tool, не просто внутренний FunctionTool
-  - [ ] Agent Skill — `skills/compliance-guardrail/SKILL.md` реально читается/используется guardrail-логикой
+  - [x] Agent Skill — `skills/compliance-guardrail/SKILL.md` реально читается/используется guardrail-логикой
   - [ ] Security feature — guardrails именованы и работают как Context-as-a-Perimeter + Denial-of-Wallet защита
 - [ ] `pytest tests/ -v` — все тесты зелёные
 - [ ] Smoke-тест (`pytest -m smoke`) зелёный — воспроизводимый end-to-end прогон, не разовый ручной
