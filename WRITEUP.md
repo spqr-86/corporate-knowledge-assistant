@@ -63,7 +63,7 @@ reaching a human.
 | **Agent Skill** | `skills/compliance-guardrail/` — SKILL.md + `references/*.txt` (Day3 progressive disclosure); the guardrail loads its escalation criteria from these files at import time, so behavior changes by editing text, not Python |
 | **Security guardrails** | Two deterministic `before_model_callback`/`before_tool_callback` hooks, not LLM judgment: **Context-as-a-Perimeter** (asks for missing jurisdiction) and **Denial-of-Wallet** (caps tool calls per session) |
 | **HITL as action** | `create_hr_ticket` produces a logged artifact on a no-match, not a text refusal; `draft_pto_request` is an approve-gated action tool |
-| **Memory** | Process-level session (multi-turn) + `InMemoryMemoryService` with the `load_memory` tool for cross-session recall — the 5th agent component from Day1 (Model/Tools/Memory/Orchestration/Deployment) |
+| **Memory** | Process-level session (multi-turn) + `InMemoryMemoryService` for cross-session recall (`load_memory` tool; the perimeter guardrail also reads memory and injects the remembered country so recall is deterministic, not model-whim) — the 5th agent component from Day1 (Model/Tools/Memory/Orchestration/Deployment) |
 
 ## Architecture
 
@@ -147,8 +147,10 @@ live testing surfaced real bugs, each closed with a regression test:
 
 ## Limitations & next steps
 
-- Retrieval is keyword/BM25, not embeddings — fine for 47 files, won't
-  scale to a full handbook without a real vector index.
+- Retrieval is embedding-based (OpenAI `text-embedding-3-small`, cosine over
+  a disk-cached index) — good for this 47-file subset; a full handbook would
+  want a managed vector store (e.g. Vertex AI Vector Search) rather than an
+  in-process matrix.
 - Memory is in-process (`InMemoryMemoryService`) — swapping in Vertex AI
   Memory Bank is a drop-in replacement, no logic changes needed (the code
   already talks to the `BaseMemoryService` interface).
