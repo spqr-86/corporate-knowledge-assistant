@@ -93,10 +93,16 @@ async def context_perimeter_guardrail(callback_context, llm_request):
     text = _last_user_text(llm_request)
     if not is_ambiguous_jurisdiction_query(text):
         return None  # let the LLM answer normally
-    if await _memory_knows_country(callback_context):
-        return None  # recall it via load_memory instead of re-asking
+    remembered = await _country_from_memory(callback_context)
+    if remembered:
+        inject_context(llm_request, remembered)  # answer for it, no re-ask
+        return None
     return LlmResponse(content=...)  # ask for the country
 ```
+
+Recall is deterministic on purpose: the guardrail reads the country from
+memory and injects it into the request itself, rather than hoping the model
+volunteers a `load_memory` call (gpt-4o-mini did so unreliably).
 
 ## Built the agentic-engineering way, not vibed
 
@@ -128,20 +134,22 @@ live testing surfaced real bugs, each closed with a regression test:
   to `draft_pto_request` — the guardrail was blocking its own action
   tool. Fixed generally: an explicit date in the query now signals an
   action request, not a lookup.
-- **Memory recall flake**: cross-session recall searched memory for the
-  word "country" — a user saying "I'm based in France" never says that
-  word. Fixed by querying for the country names themselves; went from
-  2/3 to a stable pass rate.
+- **Memory recall flake**: cross-session recall depended on the model
+  volunteering a `load_memory` call, which gpt-4o-mini did unreliably, so a
+  returning user got a generic answer instead of their remembered country.
+  Fixed by making it deterministic — the perimeter guardrail reads the
+  country from memory and injects it into the request itself; recall went
+  from intermittent to a stable pass.
 
 ## Engineering practice
 
-- **TDD throughout** — 47 tests, written before each tool/callback, not
+- **TDD throughout** — 56 tests, written before each tool/callback, not
   after; every bug above was caught because a test failed for the *wrong*
   reason first (proving it tested real behavior).
-- **`adk eval` golden set** — 12 cases across routing/ambiguous-jurisdiction/
-  action/escalation/permission categories, scored on response similarity.
-  11/12 pass; the one miss is a wording mismatch on a functionally correct
-  answer, verified by inspecting the actual tool calls.
+- **`adk eval` golden set** — 18 cases across routing/ambiguous-jurisdiction/
+  action/escalation/permission categories; 18/18 on tool-trajectory match
+  (did the agent call the right tools in the right order), the metric that
+  actually captures correct agent behavior here.
 - **Spec-driven** — `PLAN.md` is a living spec (Day5 pattern): constitution,
   architecture, decision log, and a checked-off Definition of Done.
 
@@ -161,4 +169,4 @@ live testing surfaced real bugs, each closed with a regression test:
 ## Links
 
 - **Code**: [github.com/spqr-86/corporate-knowledge-assistant](https://github.com/spqr-86/corporate-knowledge-assistant) — full test suite (`pytest tests/`), `PLAN.md` for the complete spec and decision log, `README.md` for setup instructions.
-- **Demo video**: _link once recorded_
+- **Demo video**: [youtu.be/xOeH6O2ecpM](https://youtu.be/xOeH6O2ecpM)
