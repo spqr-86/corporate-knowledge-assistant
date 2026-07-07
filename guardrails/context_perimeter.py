@@ -105,8 +105,23 @@ def _text_names_known_country(text: str) -> bool:
     return any(phrase in lower for phrase in _KNOWN_COUNTRIES_MULTI_WORD)
 
 
-async def _memory_knows_country(callback_context: CallbackContext) -> bool:
-    """True if a past conversation in memory names the user's country.
+def _extract_country(text: str) -> str | None:
+    """Return the country named in text, or None. Prefers multi-word matches."""
+    lower = text.lower()
+    for phrase in _KNOWN_COUNTRIES_MULTI_WORD:
+        if phrase in lower:
+            return phrase
+    words = set(tokenize(text))
+    for country in _KNOWN_COUNTRIES_SINGLE_WORD:
+        if country in words:
+            return country
+    if _COUNTRY_CODE_US_RE.search(text):
+        return "the United States"
+    return None
+
+
+async def _country_from_memory(callback_context: CallbackContext) -> str | None:
+    """The country a past conversation named, or None.
 
     The query is the country names themselves, not the word "country" —
     keyword-matching memory backends (InMemoryMemoryService) match query
@@ -117,13 +132,14 @@ async def _memory_knows_country(callback_context: CallbackContext) -> bool:
     try:
         response = await callback_context.search_memory(query)
     except ValueError:  # no memory service wired (e.g. bare adk eval Runner)
-        return False
+        return None
     for memory in response.memories:
         if memory.content and memory.content.parts:
             text = " ".join(p.text for p in memory.content.parts if p.text)
-            if _text_names_known_country(text):
-                return True
-    return False
+            country = _extract_country(text)
+            if country:
+                return country
+    return None
 
 
 async def context_perimeter_guardrail(
@@ -132,14 +148,31 @@ async def context_perimeter_guardrail(
     """before_model_callback: ask for the country before calling the LLM if ambiguous.
 
     Before short-circuiting, checks cross-session memory: if a past
-    conversation already named the country, the LLM gets the turn (its
-    instruction tells it to recall the country via load_memory) instead of
-    the user being re-asked something they already answered.
+    conversation already named the country, we inject it into the request
+    context so the model answers for that country deterministically —
+    rather than relying on the model to volunteer a load_memory call
+    (gpt-4o-mini does so unreliably) or re-asking something already answered.
     """
     text = _last_user_text(llm_request)
     if not is_ambiguous_jurisdiction_query(text):
         return None
-    if await _memory_knows_country(callback_context):
+    remembered = await _country_from_memory(callback_context)
+    if remembered:
+        # "For context:" prefix so _last_user_text skips this on later turns
+        llm_request.contents = list(llm_request.contents or []) + [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part(
+                        text=(
+                            f"For context: a past conversation established the "
+                            f"user is based in {remembered}. Answer for "
+                            f"{remembered} without asking again."
+                        )
+                    )
+                ],
+            )
+        ]
         return None
     return LlmResponse(
         content=types.Content(

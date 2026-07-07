@@ -6,3 +6,6 @@ __pycache__/
 .env
 data/hr_tickets.jsonl
 .adk/
+
+# generated embedding index (rebuilt from data/handbook on first run)
+data/.handbook_index.npz

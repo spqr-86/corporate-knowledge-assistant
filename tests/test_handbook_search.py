@@ -11,6 +11,16 @@ def test_search_returns_relevant_result_for_known_topic():
     )
 
 
+def test_search_ranks_country_specific_file_top():
+    # RAG must surface the entity-specific handbook file, not a generic index,
+    # when the query names a country — this is what the country-awareness demo
+    # depends on (keyword BM25 ranked generic _index.md above the country file).
+    result = search_handbook("how much parental leave in the Netherlands")
+    assert result["status"] == "success"
+    assert result["results"], "expected at least one result"
+    assert "netherlands" in result["results"][0]["relative_path"].lower()
+
+
 def test_search_empty_query_errors():
     result = search_handbook("")
     assert result["status"] == "error"

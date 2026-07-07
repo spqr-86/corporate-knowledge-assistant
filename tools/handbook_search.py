@@ -1,22 +1,37 @@
-"""Keyword search over the local GitLab Handbook markdown subset.
+"""Embedding-based semantic search over the local GitLab Handbook subset.
 
 ANCHOR: handbook_search
-Role: retrieval tool for the ADK agent — simple keyword/BM25-style search
-      over ~/projects/ai/corporate-knowledge-assistant/data/handbook.
-Input: query (str), top_k (int)
-Output: list of {path, title, snippet, score} dicts
-No embeddings/vector DB yet — MVP for the ADK loop; swap for real
-retrieval (chunking + embeddings) once the agent loop works end to end.
+Role: retrieval tool for the ADK agent — real RAG (chunk + embed + cosine)
+      over data/handbook. Replaced the earlier keyword/BM25 MVP, which ranked
+      generic index files above country/entity-specific ones and so broke the
+      country-awareness flow (an "I'm in the Netherlands" question could not
+      surface bv-benefits-netherlands.md).
+Input: query (str), top_k (int), role (str) for mock RBAC gating.
+Output: dict {status, results:[{relative_path, title, snippet, score}]} —
+      SAME shape the MCP server (mcp_server/handbook_mcp_server.py) and the
+      ADK agent already depend on. Do not change the shape without updating both.
+Embeddings: OpenAI text-embedding-3-small, batched once and cached to
+      data/.handbook_index.npz keyed by a signature over the source files
+      (path+size+mtime); rebuilt only when the handbook changes.
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from text_utils import tokenize as _tokenize
+import numpy as np
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "handbook"
+_INDEX_PATH = Path(__file__).resolve().parent.parent / "data" / ".handbook_index.npz"
+
+_EMBED_MODEL = "text-embedding-3-small"
+_MAX_CHUNK_CHARS = 1500
+_MIN_CHUNK_CHARS = 30
+# cosine below this counts as "no relevant match" so a nonsense query returns []
+_SCORE_THRESHOLD = 0.30
 
 _ROLE_RANK = {"employee": 0, "manager": 1, "hr_admin": 2}
 # mock RBAC: relative-path prefixes gated to a minimum role
@@ -37,63 +52,145 @@ def _role_allows(role: str, relative_path: str) -> bool:
 
 
 @dataclass
-class Document:
-    path: Path
+class Chunk:
+    relative_path: str
     title: str
     text: str
-    tokens: list[str]
 
 
-def _load_documents() -> list[Document]:
-    docs: list[Document] = []
+def _split_into_chunks(text: str, default_title: str) -> list[tuple[str, str]]:
+    """Split markdown into (title, chunk_text) by heading, capping chunk size."""
+    chunks: list[tuple[str, str]] = []
+    current_title = default_title
+    buf: list[str] = []
+
+    def flush() -> None:
+        body = "\n".join(buf).strip()
+        if len(body) < _MIN_CHUNK_CHARS:
+            return
+        # cap oversized sections into character windows
+        for start in range(0, len(body), _MAX_CHUNK_CHARS):
+            piece = body[start : start + _MAX_CHUNK_CHARS].strip()
+            if len(piece) >= _MIN_CHUNK_CHARS:
+                chunks.append((current_title, piece))
+
+    for line in text.splitlines():
+        if line.lstrip().startswith("#"):
+            flush()
+            buf = []
+            current_title = line.strip("# ").strip() or current_title
+        buf.append(line)
+    flush()
+    return chunks
+
+
+def _load_chunks() -> list[Chunk]:
+    chunks: list[Chunk] = []
     for md_path in sorted(DATA_DIR.rglob("*.md")):
         text = md_path.read_text(encoding="utf-8", errors="ignore")
-        title = md_path.stem.replace("-", " ").replace("_", " ")
-        for line in text.splitlines():
-            if line.strip().startswith("# "):
-                title = line.strip("# ").strip()
-                break
-        docs.append(
-            Document(path=md_path, title=title, text=text, tokens=_tokenize(text))
-        )
-    return docs
+        rel = str(md_path.relative_to(DATA_DIR))
+        default_title = md_path.stem.replace("-", " ").replace("_", " ")
+        # entity/name tokens from the path give the embedding a strong,
+        # section-independent signal about which country/entity this is, so a
+        # country query aligns with its file even when the section body doesn't
+        # repeat the country name
+        path_hint = rel.replace("/", " ").replace("-", " ").replace(".md", "")
+        for title, body in _split_into_chunks(text, default_title):
+            chunks.append(
+                Chunk(
+                    relative_path=rel,
+                    title=title,
+                    text=f"[{path_hint}] {title}\n{body}",
+                )
+            )
+    return chunks
 
 
-_DOCS_CACHE: list[Document] | None = None
+def _signature() -> str:
+    parts = []
+    for md_path in sorted(DATA_DIR.rglob("*.md")):
+        st = md_path.stat()
+        parts.append(f"{md_path.relative_to(DATA_DIR)}:{st.st_size}:{int(st.st_mtime)}")
+    parts.append(_EMBED_MODEL)
+    return hashlib.sha256("\n".join(parts).encode()).hexdigest()
 
 
-def _get_docs() -> list[Document]:
-    global _DOCS_CACHE
-    if _DOCS_CACHE is None:
-        _DOCS_CACHE = _load_documents()
-    return _DOCS_CACHE
+def _embed(texts: list[str]) -> np.ndarray:
+    from openai import OpenAI
+
+    client = OpenAI()
+    resp = client.embeddings.create(model=_EMBED_MODEL, input=texts)
+    vecs = np.array([d.embedding for d in resp.data], dtype=np.float32)
+    norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+    norms[norms == 0] = 1.0
+    return vecs / norms
 
 
-def _score(query_tokens: list[str], doc: Document) -> float:
-    if not doc.tokens:
-        return 0.0
-    doc_len = len(doc.tokens)
-    score = 0.0
-    for qt in query_tokens:
-        count = doc.tokens.count(qt)
-        if count:
-            score += count / doc_len * 1000
-    return score
+@dataclass
+class _Index:
+    signature: str
+    chunks: list[Chunk]
+    matrix: np.ndarray  # (N, D) L2-normalized
 
 
-def _snippet(doc: Document, query_tokens: list[str], width: int = 300) -> str:
-    lower = doc.text.lower()
-    for qt in query_tokens:
-        idx = lower.find(qt)
-        if idx != -1:
-            start = max(0, idx - width // 2)
-            end = min(len(doc.text), idx + width // 2)
-            return doc.text[start:end].strip().replace("\n", " ")
-    return doc.text[:width].strip().replace("\n", " ")
+_INDEX: _Index | None = None
+
+
+def _build_index() -> _Index:
+    chunks = _load_chunks()
+    matrix = _embed([c.text for c in chunks])
+    return _Index(signature=_signature(), chunks=chunks, matrix=matrix)
+
+
+def _save_index(index: _Index) -> None:
+    meta = [
+        {"relative_path": c.relative_path, "title": c.title, "text": c.text}
+        for c in index.chunks
+    ]
+    np.savez_compressed(
+        _INDEX_PATH,
+        signature=index.signature,
+        matrix=index.matrix,
+        meta=json.dumps(meta),
+    )
+
+
+def _load_cached_index(signature: str) -> _Index | None:
+    if not _INDEX_PATH.exists():
+        return None
+    try:
+        data = np.load(_INDEX_PATH, allow_pickle=False)
+        if str(data["signature"]) != signature:
+            return None
+        meta = json.loads(str(data["meta"]))
+        chunks = [Chunk(**m) for m in meta]
+        return _Index(signature=signature, chunks=chunks, matrix=data["matrix"])
+    except (KeyError, ValueError, OSError):
+        return None
+
+
+def _get_index() -> _Index:
+    global _INDEX
+    sig = _signature()
+    if _INDEX is not None and _INDEX.signature == sig:
+        return _INDEX
+    cached = _load_cached_index(sig)
+    if cached is not None:
+        _INDEX = cached
+        return _INDEX
+    _INDEX = _build_index()
+    _save_index(_INDEX)
+    return _INDEX
+
+
+def _snippet(text: str, width: int = 300) -> str:
+    # drop the synthetic "[path hint] title" prefix line for display
+    body = text.split("\n", 1)[-1] if text.startswith("[") else text
+    return body[:width].strip().replace("\n", " ")
 
 
 def search_handbook(query: str, top_k: int = 3, role: str = "employee") -> dict:
-    """Search the GitLab Handbook subset (total-rewards, hiring, people-policies).
+    """Semantic search over the GitLab Handbook subset.
 
     Args:
         query: natural-language question or keywords to search for.
@@ -103,36 +200,47 @@ def search_handbook(query: str, top_k: int = 3, role: str = "employee") -> dict:
 
     Returns:
         dict with 'status' ('success' or 'error') and 'results': a list of
-        {relative_path, title, snippet, score} for the best-matching docs.
+        {relative_path, title, snippet, score} for the best-matching docs,
+        deduplicated to one entry per source file (highest-scoring chunk).
     """
-    query_tokens = _tokenize(query)
-    if not query_tokens:
+    if not query or not query.strip():
         return {"status": "error", "error_message": "Empty query."}
 
-    docs = _get_docs()
-    if not docs:
+    index = _get_index()
+    if not index.chunks:
         return {
             "status": "error",
             "error_message": f"No handbook documents found under {DATA_DIR}.",
         }
 
-    docs = [d for d in docs if _role_allows(role, str(d.path.relative_to(DATA_DIR)))]
-
-    scored = [(d, _score(query_tokens, d)) for d in docs]
-    scored = [pair for pair in scored if pair[1] > 0]
-    scored.sort(key=lambda pair: pair[1], reverse=True)
-
-    if not scored:
+    allowed = [
+        i for i, c in enumerate(index.chunks) if _role_allows(role, c.relative_path)
+    ]
+    if not allowed:
         return {"status": "success", "results": []}
 
-    results = []
-    for doc, score in scored[:top_k]:
-        results.append(
-            {
-                "relative_path": str(doc.path.relative_to(DATA_DIR)),
-                "title": doc.title,
-                "snippet": _snippet(doc, query_tokens),
-                "score": round(score, 2),
-            }
-        )
+    q = _embed([query])[0]
+    sims = index.matrix[allowed] @ q  # cosine (both L2-normalized)
+
+    order = np.argsort(sims)[::-1]
+    best_per_file: dict[str, tuple[float, Chunk]] = {}
+    for j in order:
+        score = float(sims[j])
+        if score < _SCORE_THRESHOLD:
+            break
+        chunk = index.chunks[allowed[j]]
+        prev = best_per_file.get(chunk.relative_path)
+        if prev is None or score > prev[0]:
+            best_per_file[chunk.relative_path] = (score, chunk)
+
+    ranked = sorted(best_per_file.values(), key=lambda p: p[0], reverse=True)
+    results = [
+        {
+            "relative_path": chunk.relative_path,
+            "title": chunk.title,
+            "snippet": _snippet(chunk.text),
+            "score": round(score, 4),
+        }
+        for score, chunk in ranked[:top_k]
+    ]
     return {"status": "success", "results": results}

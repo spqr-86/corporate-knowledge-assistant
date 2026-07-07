@@ -1,6 +1,8 @@
 google-adk[eval]==2.3.0
 litellm==1.85.7
 mcp==1.28.1
+numpy==2.5.0
+openai==2.44.0
 pytest==9.1.1
 pytest-asyncio==1.4.0
 structlog==26.1.0
