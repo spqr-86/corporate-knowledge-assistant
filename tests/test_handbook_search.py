@@ -1,7 +1,12 @@
 import openai
+import pytest
 
 import tools.handbook_search as hs
 from tools.handbook_search import search_handbook
+
+# all tests run against the deterministic fake embedder (tests/conftest.py) —
+# no OPENAI_API_KEY needed
+pytestmark = pytest.mark.usefixtures("fake_embedder")
 
 
 def test_search_returns_error_dict_when_embedding_fails(monkeypatch):

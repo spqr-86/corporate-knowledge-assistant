@@ -22,13 +22,14 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from mcp import StdioServerParameters
 
+from config import settings
 from guardrails.context_perimeter import context_perimeter_guardrail
 from guardrails.dow_limit import dow_guardrail
 from guardrails.role_binding import bind_role_from_session
 from tools.create_hr_ticket import create_hr_ticket
 from tools.draft_pto_request import draft_pto_request
 
-MODEL_ID = LiteLlm(model="openai/gpt-4o-mini")
+MODEL_ID = LiteLlm(model=settings.model_id)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 

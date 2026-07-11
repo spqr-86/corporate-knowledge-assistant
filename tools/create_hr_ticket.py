@@ -13,9 +13,10 @@ from __future__ import annotations
 
 import json
 import uuid
-from pathlib import Path
 
-TICKET_LOG_PATH = Path(__file__).resolve().parent.parent / "data" / "hr_tickets.jsonl"
+from config import settings
+
+TICKET_LOG_PATH = settings.ticket_log_path
 
 
 def create_hr_ticket(question: str, reason: str) -> dict:
