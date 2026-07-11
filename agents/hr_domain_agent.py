@@ -12,6 +12,7 @@ it in the Coordinator's sub_agents in agent.py — no change to this file.
 """
 
 import os
+import sys
 from pathlib import Path
 
 from google.adk.agents import Agent
@@ -36,7 +37,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 handbook_mcp_toolset = McpToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
-            command="python3",
+            # sys.executable, not "python3": a bare name resolves via PATH,
+            # which lacks venv/bin when the parent runs as venv/bin/python
+            # without an activated venv — the subprocess then can't import mcp
+            command=sys.executable,
             args=["-m", "mcp_server.handbook_mcp_server"],
             cwd=str(PROJECT_ROOT),
             # inherit the parent env so the MCP subprocess sees OPENAI_API_KEY
