@@ -17,12 +17,11 @@ import time
 
 import structlog
 
+from config import settings
+
 logger = structlog.get_logger("corporate_knowledge_assistant")
 
-GPT_4O_MINI_PRICING = {
-    "prompt_per_million": 0.15,
-    "candidates_per_million": 0.60,
-}
+GPT_4O_MINI_PRICING: dict[str, float] = settings.pricing
 
 
 class TurnObserver:

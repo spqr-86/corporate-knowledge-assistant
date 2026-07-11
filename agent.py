@@ -24,10 +24,11 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from agents.hr_domain_agent import hr_domain_agent
+from config import settings
 from observability import TurnObserver
 
 APP_NAME = "corporate_knowledge_assistant"
-USER_ID = "petr"
+USER_ID = settings.user_id
 SESSION_ID = "dev-session"
 
 root_agent = Agent(

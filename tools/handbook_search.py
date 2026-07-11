@@ -19,25 +19,25 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "handbook"
-_INDEX_PATH = Path(__file__).resolve().parent.parent / "data" / ".handbook_index.npz"
+from config import settings
+
+DATA_DIR = settings.data_dir
+_INDEX_PATH = settings.index_path
 
 _EMBED_MODEL = "text-embedding-3-small"
 _MAX_CHUNK_CHARS = 1500
 _MIN_CHUNK_CHARS = 30
 # cosine below this counts as "no relevant match" so a nonsense query returns []
-_SCORE_THRESHOLD = 0.30
+_SCORE_THRESHOLD = settings.score_threshold
 
 _ROLE_RANK = {"employee": 0, "manager": 1, "hr_admin": 2}
-# mock RBAC: relative-path prefixes gated to a minimum role
-_RESTRICTED_PREFIXES: dict[str, str] = {
-    "total-rewards/compensation": "manager",
-}
+# mock RBAC: relative-path prefixes gated to a minimum role (see config.py)
+_RESTRICTED_PREFIXES: dict[str, str] = settings.restricted_prefixes
 
 
 def _min_role_for(relative_path: str) -> str:
@@ -112,10 +112,14 @@ def _signature() -> str:
         st = md_path.stat()
         parts.append(f"{md_path.relative_to(DATA_DIR)}:{st.st_size}:{int(st.st_mtime)}")
     parts.append(_EMBED_MODEL)
+    # embedder identity: a fake-embedded index (tests) must never be
+    # persisted/reused as a prod OpenAI index — same files, different vectors
+    parts.append(getattr(_embed, "__qualname__", repr(_embed)))
     return hashlib.sha256("\n".join(parts).encode()).hexdigest()
 
 
-def _embed(texts: list[str]) -> np.ndarray:
+def _openai_embed(texts: list[str]) -> np.ndarray:
+    """Default embedder: OpenAI text-embedding-3-small, L2-normalized."""
     from openai import OpenAI
 
     client = OpenAI()
@@ -124,6 +128,12 @@ def _embed(texts: list[str]) -> np.ndarray:
     norms = np.linalg.norm(vecs, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
     return vecs / norms
+
+
+# embedder seam: all embedding calls go through this module-level name so
+# tests can monkeypatch it (see tests/conftest.py fake_embedder) without a
+# live OPENAI_API_KEY; production default is the OpenAI implementation.
+_embed: Callable[[list[str]], np.ndarray] = _openai_embed
 
 
 @dataclass

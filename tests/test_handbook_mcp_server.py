@@ -4,6 +4,10 @@ import pytest
 
 from mcp_server.handbook_mcp_server import mcp
 
+# retrieval behind the MCP tool uses the fake embedder (tests/conftest.py) —
+# no OPENAI_API_KEY needed
+pytestmark = pytest.mark.usefixtures("fake_embedder")
+
 
 @pytest.mark.asyncio
 async def test_mcp_server_exposes_search_handbook_tool():
