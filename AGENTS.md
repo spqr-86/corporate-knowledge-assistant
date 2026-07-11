@@ -39,6 +39,15 @@ PLAN.md — read it whenever returning to this project after a gap.
 - `.env` — never commit, never print its contents
 - GitHub repo creation/push to a shared or public remote — confirm before first push
 
+## Post-submission hardening (11.07, post-capstone review)
+
+Capstone уже сдан (07.07); это — ревью/дебаг/рефакторинг по запросу Петра поверх сданной версии, не блокирует ничего.
+- `dc32210`/`ff0c485`: search_handbook возвращает `{"status":"error"}` вместо raise на сбое OpenAI; DoW-счётчик на `temp:`-state (сброс каждый ход, не копится на всю сессию); `ensure_session` кидает ValueError на mismatch role.
+- `38f5db8`: MCP-сабпроцесс спавнился `"python3"` (резолвится по PATH, терял venv) → `sys.executable`.
+- `e354415`/`95379ef`: embedder seam (`_embed` подменяемый провайдер) + fake bag-of-words эмбеддер в тестах — retrieval-тесты (11 шт.) идут без `OPENAI_API_KEY`; центральный `config.py` (frozen `Settings` + `CKA_*` env-оверрайды) вместо констант в 5 файлах.
+- Тесты: 59/59 non-e2e зелёные. Известный флейк — `test_coordinator_routing` (живой LLM-вызов), не связан с изменениями.
+- Осталось опционально (не сделано, ждёт запроса): RBAC-registry вместо хардкода имени тула в role_binding; RBAC не закрывает stock-options/incentives (решить осознанно ли); os.environ целиком в MCP-сабпроцесс; importlib-хак в eval/agent_target.
+
 ## Definition of Done (capstone submission)
 
 See PLAN.md §12 for the full checklist. Short version: agent runs end-to-end
