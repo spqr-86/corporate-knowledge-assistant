@@ -206,7 +206,16 @@ def search_handbook(query: str, top_k: int = 3, role: str = "employee") -> dict:
     if not query or not query.strip():
         return {"status": "error", "error_message": "Empty query."}
 
-    index = _get_index()
+    # lazy import (mirrors _embed) — keeps module import free of openai
+    from openai import OpenAIError
+
+    try:
+        index = _get_index()
+    except (OpenAIError, ConnectionError, OSError) as exc:
+        return {
+            "status": "error",
+            "error_message": f"Failed to build handbook index (embedding error): {exc}",
+        }
     if not index.chunks:
         return {
             "status": "error",
@@ -219,7 +228,13 @@ def search_handbook(query: str, top_k: int = 3, role: str = "employee") -> dict:
     if not allowed:
         return {"status": "success", "results": []}
 
-    q = _embed([query])[0]
+    try:
+        q = _embed([query])[0]
+    except (OpenAIError, ConnectionError, OSError) as exc:
+        return {
+            "status": "error",
+            "error_message": f"Failed to embed query (embedding error): {exc}",
+        }
     sims = index.matrix[allowed] @ q  # cosine (both L2-normalized)
 
     order = np.argsort(sims)[::-1]

@@ -80,12 +80,22 @@ async def ensure_session(session_id: str, role: str = "employee"):
 
     role only applies at creation — an existing session keeps the role it
     was created with (see guardrails/role_binding.py for why role must come
-    from session state, never from the model).
+    from session state, never from the model). Requesting an existing
+    session with a different role raises ValueError instead of silently
+    proceeding with the stored role (privilege-confusion guard).
     """
     runner = get_runner()
     session = await runner.session_service.get_session(
         app_name=APP_NAME, user_id=USER_ID, session_id=session_id
     )
+    if session is not None:
+        stored_role = session.state.get("user_role")
+        if stored_role != role:
+            raise ValueError(
+                f"Session '{session_id}' was created with role="
+                f"'{stored_role}', but role='{role}' was requested. "
+                "Use a new session_id for a different role."
+            )
     if session is None:
         session = await runner.session_service.create_session(
             app_name=APP_NAME,

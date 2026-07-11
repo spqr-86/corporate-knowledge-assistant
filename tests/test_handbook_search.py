@@ -1,4 +1,21 @@
+import openai
+
+import tools.handbook_search as hs
 from tools.handbook_search import search_handbook
+
+
+def test_search_returns_error_dict_when_embedding_fails(monkeypatch):
+    """OpenAI/network failures must honor the documented contract
+    ({status: error, ...}) instead of raising out of search_handbook."""
+
+    def _boom(texts):
+        raise openai.OpenAIError("no api key / network down")
+
+    monkeypatch.setattr(hs, "_embed", _boom)
+    monkeypatch.setattr(hs, "_INDEX", None)
+    result = search_handbook("parental leave benefits")
+    assert result["status"] == "error"
+    assert result["error_message"]
 
 
 def test_search_returns_relevant_result_for_known_topic():
