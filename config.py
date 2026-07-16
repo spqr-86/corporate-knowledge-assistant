@@ -26,6 +26,13 @@ DEFAULT_RESTRICTED_PREFIXES: dict[str, str] = {
     "total-rewards/compensation": "manager",
 }
 
+# Retrieval tools whose `role` argument must be bound from trusted session
+# state, never trusted from the LLM. The role-binding guardrail also applies
+# fail-closed to any *other* tool that carries a `role` arg (see
+# guardrails/role_binding.py), so renaming or adding a retrieval tool cannot
+# silently reopen the RBAC bypass — this set is the explicit, known list.
+RBAC_GATED_TOOLS: frozenset[str] = frozenset({"search_handbook"})
+
 # gpt-4o-mini list price (per 1M tokens) as of the model's release —
 # approximation for the pitch, not a billing-accurate figure
 DEFAULT_GPT_4O_MINI_PRICING: dict[str, float] = {
@@ -45,11 +52,12 @@ class Settings:
     restricted_prefixes: dict[str, str] = field(
         default_factory=lambda: dict(DEFAULT_RESTRICTED_PREFIXES)
     )
+    rbac_gated_tools: frozenset[str] = RBAC_GATED_TOOLS
     ticket_log_path: Path = _PROJECT_ROOT / "data" / "hr_tickets.jsonl"
     pricing: dict[str, float] = field(
         default_factory=lambda: dict(DEFAULT_GPT_4O_MINI_PRICING)
     )
-    user_id: str = "petr"
+    user_id: str = "demo-user"
 
 
 def load() -> Settings:

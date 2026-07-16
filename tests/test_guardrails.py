@@ -24,16 +24,21 @@ def _ambiguous_request() -> LlmRequest:
     )
 
 
-def _callback_context(memories: list[str] | None = None, available: bool = True):
+def _memory_entry(item: str | tuple[str, str]) -> MemoryEntry:
+    """`item` is a bare string (role='user') or a (role, text) tuple."""
+    role, text = ("user", item) if isinstance(item, str) else item
+    return MemoryEntry(content=types.Content(role=role, parts=[types.Part(text=text)]))
+
+
+def _callback_context(
+    memories: list[str | tuple[str, str]] | None = None, available: bool = True
+):
     ctx = MagicMock()
     if not available:
         ctx.search_memory = AsyncMock(side_effect=ValueError("no memory service"))
         return ctx
     response = MagicMock()
-    response.memories = [
-        MemoryEntry(content=types.Content(role="user", parts=[types.Part(text=text)]))
-        for text in (memories or [])
-    ]
+    response.memories = [_memory_entry(item) for item in (memories or [])]
     ctx.search_memory = AsyncMock(return_value=response)
     return ctx
 
@@ -45,6 +50,55 @@ async def test_guardrail_lets_ambiguous_query_through_when_memory_knows_country(
     ctx = _callback_context(memories=["I'm based in France."])
     result = await context_perimeter_guardrail(ctx, _ambiguous_request())
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_memory_recall_ignores_country_named_only_in_agent_answer():
+    """A country the agent merely MENTIONED in a past answer (an example, a
+    comparison) is NOT the user's established jurisdiction — only what the
+    user themselves said counts. Otherwise recall silently cross-contaminates
+    and the assistant confidently answers for the wrong country, defeating the
+    whole 'don't guess the jurisdiction' guarantee."""
+    ctx = _callback_context(
+        memories=[("model", "In France you would typically get 16 weeks of leave.")]
+    )
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is not None  # no user-established country -> ask, don't assume
+
+
+@pytest.mark.asyncio
+async def test_memory_recall_uses_user_country_despite_agent_mentions():
+    """A country the agent mentioned must not shadow the one the user actually
+    stated — the user's own message is the source of truth."""
+    ctx = _callback_context(
+        memories=[
+            ("model", "In Germany the parental-leave rules differ."),
+            ("user", "I'm based in France."),
+        ]
+    )
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is None  # user said France -> let the turn through
+
+
+@pytest.mark.asyncio
+async def test_memory_recall_ignores_multi_country_comparison_message():
+    """A user comparison message naming several countries does NOT establish
+    one jurisdiction. Recall must not pick an arbitrary one (frozenset
+    iteration order was nondeterministic between runs) — fall back to asking."""
+    ctx = _callback_context(memories=["Compare France and Canada parental leave."])
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_guardrail_survives_unexpected_memory_backend_error():
+    """A durable memory backend can raise more than ValueError (network,
+    timeout). before_model_callback must degrade to asking, never crash the
+    turn with a 500."""
+    ctx = MagicMock()
+    ctx.search_memory = AsyncMock(side_effect=RuntimeError("memory backend down"))
+    result = await context_perimeter_guardrail(ctx, _ambiguous_request())
+    assert result is not None
 
 
 @pytest.mark.asyncio

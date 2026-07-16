@@ -33,6 +33,34 @@ MODEL_ID = LiteLlm(model=settings.model_id)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# The MCP subprocess needs only these to run: the OpenAI key (the retriever
+# embeds the query over HTTPS), PATH/VIRTUAL_ENV (resolve the venv
+# interpreter), HOME (SDK cache dir), the TLS trust store (custom CA bundles
+# are env-configured under conda/Nix/corporate proxies — omit them and every
+# embedding call fails TLS verification in prod though it works on a dev box
+# with system certs), locale (avoid UnicodeEncodeError on non-ASCII handbook
+# text), TMPDIR, and any CKA_* config overrides. Passing the whole parent
+# environment would hand the child unrelated secrets it never uses.
+_MCP_ENV_WHITELIST = (
+    "OPENAI_API_KEY",
+    "PATH",
+    "HOME",
+    "VIRTUAL_ENV",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "REQUESTS_CA_BUNDLE",
+    "LANG",
+    "LC_ALL",
+    "TMPDIR",
+)
+
+
+def _mcp_subprocess_env() -> dict[str, str]:
+    env = {k: os.environ[k] for k in _MCP_ENV_WHITELIST if k in os.environ}
+    env.update({k: v for k, v in os.environ.items() if k.startswith("CKA_")})
+    return env
+
+
 # retrieval is exposed over MCP (mcp_server/handbook_mcp_server.py), not a
 # local FunctionTool — the course requires demonstrating MCP as a protocol.
 handbook_mcp_toolset = McpToolset(
@@ -44,10 +72,9 @@ handbook_mcp_toolset = McpToolset(
             command=sys.executable,
             args=["-m", "mcp_server.handbook_mcp_server"],
             cwd=str(PROJECT_ROOT),
-            # inherit the parent env so the MCP subprocess sees OPENAI_API_KEY
-            # (the retriever embeds the query via OpenAI) and the venv PATH;
-            # StdioServerParameters otherwise starts from a minimal environment
-            env=dict(os.environ),
+            # whitelisted env only (see _mcp_subprocess_env) — the child needs
+            # OPENAI_API_KEY + venv PATH, not the whole parent environment
+            env=_mcp_subprocess_env(),
         ),
     ),
 )

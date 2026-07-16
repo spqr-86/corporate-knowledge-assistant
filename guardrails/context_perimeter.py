@@ -105,18 +105,41 @@ def _text_names_known_country(text: str) -> bool:
     return any(phrase in lower for phrase in _KNOWN_COUNTRIES_MULTI_WORD)
 
 
-def _extract_country(text: str) -> str | None:
-    """Return the country named in text, or None. Prefers multi-word matches."""
+# Aliases that name the same jurisdiction, canonicalized so "uk" and "united
+# kingdom" (or "usa"/"united states"/"US") count as ONE country, not several.
+_COUNTRY_CANON = {
+    "uk": "the united kingdom",
+    "united kingdom": "the united kingdom",
+    "usa": "the united states",
+    "united states": "the united states",
+}
+
+
+def _countries_in_text(text: str) -> set[str]:
+    """The set of DISTINCT jurisdictions named in text (canonicalized)."""
     lower = text.lower()
+    found: set[str] = set()
     for phrase in _KNOWN_COUNTRIES_MULTI_WORD:
         if phrase in lower:
-            return phrase
-    words = set(tokenize(text))
-    for country in _KNOWN_COUNTRIES_SINGLE_WORD:
-        if country in words:
-            return country
+            found.add(_COUNTRY_CANON.get(phrase, phrase))
+    for country in set(tokenize(text)) & _KNOWN_COUNTRIES_SINGLE_WORD:
+        found.add(_COUNTRY_CANON.get(country, country))
     if _COUNTRY_CODE_US_RE.search(text):
-        return "the United States"
+        found.add("the united states")
+    return found
+
+
+def _extract_country(text: str) -> str | None:
+    """The single jurisdiction named in text, or None.
+
+    Returns None when the text names ZERO or MORE THAN ONE country: a
+    comparison like "France vs Canada" establishes no single jurisdiction, so
+    picking one (nondeterministically, from set order) would guess exactly
+    what this guardrail exists to prevent. Deterministic by construction.
+    """
+    countries = _countries_in_text(text)
+    if len(countries) == 1:
+        return next(iter(countries))
     return None
 
 
@@ -131,14 +154,29 @@ async def _country_from_memory(callback_context: CallbackContext) -> str | None:
     query = " ".join(sorted(_KNOWN_COUNTRIES_SINGLE_WORD | _KNOWN_COUNTRIES_MULTI_WORD))
     try:
         response = await callback_context.search_memory(query)
-    except ValueError:  # no memory service wired (e.g. bare adk eval Runner)
+    except Exception:
+        # No memory service wired (ValueError on a bare adk eval Runner) or a
+        # durable backend failing (network/timeout) — a jurisdiction hint is
+        # optional, so degrade to asking the user rather than crashing the
+        # whole before_model_callback (which would 500 every ambiguous turn).
         return None
     for memory in response.memories:
-        if memory.content and memory.content.parts:
-            text = " ".join(p.text for p in memory.content.parts if p.text)
-            country = _extract_country(text)
-            if country:
-                return country
+        content = memory.content
+        # Only the USER establishes their own jurisdiction. Archived memory
+        # includes the agent's own past answers (role='model'), which may name
+        # a country as an example or comparison — trusting those would let the
+        # assistant silently answer for a country the user never stated. Read
+        # the user's own messages only.
+        if not content or content.role != "user" or not content.parts:
+            continue
+        text = " ".join(p.text for p in content.parts if p.text)
+        # Skip our own injected "For context:" recall notes — a user-role
+        # message we synthesized, not something the user actually said.
+        if text.startswith("For context:"):
+            continue
+        country = _extract_country(text)
+        if country:
+            return country
     return None
 
 
